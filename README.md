@@ -1,2 +1,2 @@
-# COPMPI__HW3
+# COMPI__HW3
 bison and semantic checks
