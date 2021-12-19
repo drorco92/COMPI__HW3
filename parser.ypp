@@ -4,6 +4,9 @@
 	extern int yylineno;
 	int yyerror(const char * message);
     extern int yylex();
+    void CheckLegalB(int n);
+    int nested_While = 0;
+    Exp* Cast(Exp* exp, string Type);
 %}
 
 %token VOID
@@ -26,6 +29,8 @@
 %token ID
 %token NUM
 %token STRING
+%token LARR
+%token RARR
 
 %right ASSIGN
 %left OR
@@ -40,57 +45,83 @@
 %nonassoc ELSE
 
 %%
-Program        : Funcs                                                        {printProductionRule(1);}
-Funcs          : FuncDecl Funcs                                               {printProductionRule(3);}
-               |                                                              {printProductionRule(2);}
-FuncDecl       : RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE    {printProductionRule(4);}
-RetType        : Type                                                         {printProductionRule(5);}
-               | VOID                                                         {printProductionRule(6);}
-Formals        : FormalsList                                                  {printProductionRule(8);}
-               |                                                              {printProductionRule(7);}
-FormalsList    : FormalDecl                                                   {printProductionRule(9);}
-               | FormalDecl COMMA FormalsList                                 {printProductionRule(10);}
-FormalDecl     : TypeAnnotation Type ID                                       {printProductionRule(11);}
-Statements     : Statement                                                    {printProductionRule(12);}
-               | Statements Statement                                         {printProductionRule(13);}
-Statement      : LBRACE Statements RBRACE                                     {printProductionRule(14);}
-               | TypeAnnotation Type ID SC                                    {printProductionRule(15);}
-               | TypeAnnotation Type ID ASSIGN Exp SC                         {printProductionRule(16);}
-               | ID ASSIGN Exp SC                                             {printProductionRule(17);}
-               | Call SC                                                      {printProductionRule(18);}
-               | RETURN SC                                                    {printProductionRule(19);}
-               | RETURN Exp SC                                                {printProductionRule(20);}
-               | IF LPAREN Exp RPAREN Statement                               {printProductionRule(21);}
-               | IF LPAREN Exp RPAREN Statement ELSE Statement                {printProductionRule(22);}
-               | WHILE LPAREN Exp RPAREN Statement                            {printProductionRule(23);}
-               | BREAK SC                                                     {printProductionRule(24);}
-               | CONTINUE SC                                                  {printProductionRule(25);}
-Call           : ID LPAREN ExpList RPAREN                                     {printProductionRule(26);}
-               | ID LPAREN RPAREN                                             {printProductionRule(27);}
-ExpList        : Exp                                                          {printProductionRule(28);}
-               | Exp COMMA ExpList                                            {printProductionRule(29);}
-Type           : INT                                                          {printProductionRule(30);}
-               | BYTE                                                         {printProductionRule(31);}
-               | BOOL                                                         {printProductionRule(32);}
-TypeAnnotation : CONST                                                        {printProductionRule(34);}
-               |                                                              {printProductionRule(33);}
-Exp            : LPAREN Exp RPAREN                                            {printProductionRule(35);}
-               | Exp BINOP_ADD Exp                                            {printProductionRule(36);}
-               | Exp BINOP_MULTIPLY Exp                                       {printProductionRule(36);}
-               | ID                                                           {printProductionRule(37);}
-               | Call                                                         {printProductionRule(38);}
-               | NUM                                                          {printProductionRule(39);}
-               | NUM B                                                        {printProductionRule(40);}
-               | STRING                                                       {printProductionRule(41);}
-               | TRUE                                                         {printProductionRule(42);}
-               | FALSE                                                        {printProductionRule(43);}
-               | NOT Exp                                                      {printProductionRule(44);}
-               | Exp AND Exp                                                  {printProductionRule(45);}
-               | Exp OR Exp                                                   {printProductionRule(46);}
-               | Exp RELOP_EQUAL Exp                                          {printProductionRule(47);}
-               | Exp RELOP Exp                                                {printProductionRule(47);}
-               | LPAREN TypeAnnotation Type RPAREN Exp                        {printProductionRule(48);}
-
+Program        : Funcs                                                        {close global scope;}
+Funcs          : FuncDecl Funcs                                               {if (yytext.tostring != "") yyerror(nullptr);}
+               |                                                              {/* No Action */}
+FuncDecl       : RetType ID LPAREN Formals RPAREN                             {Add func Symbols ID($2), Type($1)}
+                 LBRACE                                                       { Open, set return type, set arguments}
+                 Statements                                                   {/* No Action *}
+                 RBRACE                                                       {Current ret type: ""(This is how we track which fumction we are in), Close Scope}
+RetType        : Type                                                         {assert return type($1)}
+               | VOID                                                         {assert return type($1)}
+Formals        : FormalsList                                                  {$$->m_argsList = $1->m_argsList;}
+               |                                                              {$$ = new FuncArgsList();}
+FormalsList    : FormalDecl                                                   {
+                                                                                $$ = new FuncArgsList();
+                                                                                $$->m_argsList.push_back($1->m_arg);
+                                                                              }
+               | FormalDecl COMMA FormalsList                                 {
+                                                                                  $$ = new FuncArgsList();
+                                                                                  $$->m_argsList = $3->m_argsList;
+                                                                                  $$->m_argsList.push_back($1->m_arg);
+                                                                              }
+FormalDecl     : TypeAnnotation Type ID                                       {new func arg: const, type ID}
+Statements     : Statement                                                    {/* No Action */}
+               | Statements Statement                                         {/* No Action */}
+Statement      : LBRACE New_Scope Statements RBRACE End_Scope                 {/* No Action */}
+               | TypeAnnotation Type ID SC                                    {Symbol Table add variable const, type, ID}
+               | TypeAnnotation Type ID ASSIGN Exp SC                         {
+                                                                                  Check if assignment is legal (need to know type for add var)
+                                                                                  Try add var (if exists okay if Type TypeAnnot and Type == "")
+                                                                              }
+               | ID ASSIGN Exp SC                                             {validate assignment}
+               | Call SC                                                      {/* No Action */}
+               | RETURN SC                                                    {validate function return type is void}
+               | RETURN Exp SC                                                {validate function return type is $2->type}
+               | IF LPAREN Exp RPAREN New_Scope Statement End_Scope           {/* No Action */}
+               | IF LPAREN Exp RPAREN New_Scope Statement End_Scope           {Validate $3->type boolean}
+                ELSE New_Scope Statement End_Scope                            {Validate $3->type boolean}
+               | WHILE LPAREN Exp RPAREN New_Scope                            {Validate $3->type boolean, nested_loop++} // Should I open scope? possibly
+                Statement
+                End_Scope
+               | BREAK SC                                                     {if (!nested_loop) error(ILLEGALBREAK) exit(0);}
+               | CONTINUE SC                                                  {if (!nested_loop) error(ILLEGALCONT) exit(0);}
+Call           : ID LPAREN ExpList RPAREN                                     {??}
+               | ID LPAREN RPAREN                                             {??}
+ExpList        : Exp                                                          {/* No Action */}
+               | Exp COMMA ExpList                                            {/* No Action */}
+Type           : INT                                                          {$$ = new Exp($1);}
+               | BYTE                                                         {$$ = new Exp($1);}
+               | BOOL                                                         {$$ = new Exp($1);}
+TypeAnnotation : CONST                                                        {$$ = new Exp($1);}
+               |                                                              {/* No Action */}
+Exp            : LPAREN Exp RPAREN                                            {$$ = new Exp($2->m_type);}
+               | Exp BINOP_ADD Exp                                            {$$ = do_op($1, $3, PBINOP);}
+               | Exp BINOP_MULTIPLY Exp                                       {$$ = do_op($1, $3, PBINOP);}
+               | ID                                                           {
+                                                                                 $$ = new Exp(type($1->name));
+                                                                                 $$->m_varName = $1->m_name;
+                                                                              }
+               | Call                                                         {$$ = new Exp($1->m_type);}
+               | NUM                                                          {$$ = new Exp("INT");}
+               | NUM B                                                        {
+                                                                                CheckLegalB(yylval.val))
+                                                                                $$ = new Exp("BYTE");
+                                                                              }
+               | STRING                                                       {$$ = new Exp("STRING");}
+               | TRUE                                                         {$$ = new Exp("BOOL");}
+               | FALSE                                                        {$$ = new Exp("BOOL");}
+               | NOT Exp                                                      {$$ = do_op($2, $2, PNOT);}
+               | Exp AND Exp                                                  {$$ = do_op($1, $3, PAND);}
+               | Exp OR Exp                                                   {$$ = do_op($1, $3, POR);}
+               | Exp RELOP_EQUAL Exp                                          {$$ = do_op($1, $3, PRELOP);}
+               | Exp RELOP Exp                                                {$$ = do_op($1, $3, PRELOP);}
+               | LPAREN TYPE RPAREN EXP                                       {
+                                                                                if cast_legal($2, $4->type);
+                                                                                $$ = new CastedExp($4, $2);
+                                                                              }
+New_Scope      :                                                              {Close Scope;}
+End_Scope      :                                                              {Open New Scope;}
 %%
 
 int main()
@@ -102,4 +133,13 @@ int yyerror(const char* message)
 {
 	errorSyn(yylineno);
 	exit(1);
+}
+
+void CheckLegalB(int n)
+{
+    if (n > 255)
+    {
+        errorByteTooLarge(yylineno, to_string(yylval.val));
+        exit(1);
+    }
 }
