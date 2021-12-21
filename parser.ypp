@@ -135,7 +135,7 @@ Funcs          : FuncDecl Funcs                                               {
 
 
 FuncDecl       : RetType ID LPAREN Formals RPAREN                             {
-                                                                                  parser.AddSymbol($2->name,$1->type, $4->arguments);
+                                                                                  parser.AddSymbol($2->name, $1->type, $4->arguments);
                                                                               }
                  LBRACE                                                       {
                                                                                   parser.symbolTable.OpenScope();
