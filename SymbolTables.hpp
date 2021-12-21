@@ -36,7 +36,7 @@ public:
 };
 
 class Function : public Symbol {
-    std::vector<string> arguments_types;
+    std::vector<string> argument_types;
     string return_type;
 public:
     Function(string name, string return_type, std::vector<string> arguments_types);
