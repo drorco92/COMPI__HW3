@@ -35,9 +35,9 @@ struct Id {
 };
 
 struct Argument {
+    string annotation;
     string name;
     string type;
-    string annotation;
     Argument(const string& annotation, const string& name, const string& type) : this.annotation(annotation), this.name(name), this.type(type) {};
 };
 
