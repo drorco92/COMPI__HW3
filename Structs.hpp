@@ -12,6 +12,7 @@
 
 typedef std::vector<Argument> ArgVector;
 typedef std::vector<Argument> TypeVector;
+typedef std::vector<string> StringVector;
 
 struct Exp {
     string name;
@@ -37,7 +38,7 @@ struct Argument {
     string annotation;
     string name;
     string type;
-    Argument(const string& name, const string& type, const string& annotation) : this.annotation(annotation), this.name(name), this.type(type) {};
+    Argument(const string& annotation, const string& name, const string& type) : this.annotation(annotation), this.name(name), this.type(type) {};
 };
 
 struct ArgumentList {
