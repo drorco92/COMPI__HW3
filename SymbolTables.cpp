@@ -28,7 +28,11 @@ void Function::printi(int) {
 
 Symbol_Table::Symbol_Table(Symbol_Table* parent) {
     this->parent = parent;
+
 }
 
-
-SymbolTables::Function()
+void TablesList::open_first_scope() {
+    Symbol_Table first_table = Symbol_Table(nullptr);
+    this->tables.push_back(first_table);
+    this->offsets.push(0)
+}
