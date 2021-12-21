@@ -1,12 +1,51 @@
 %{
 	#include "output.hpp"
+	#include "Structs.hpp"
 	using namespace output;
+
+    enum {
+        NONE,
+        ASSIGN,
+        RELOP,
+        AND,
+        OR,
+        NOT,
+        BINOP,
+    };
+
+    String[7] {
+        "", // NONE
+        "ASSIGN",
+        "RELOP",
+        "AND",
+        "OR",
+        "NOT",
+        "BINOP",
+    } ReturnType;
+
+    class Parser {
+    private:
+        SymbolTable symbolTable;
+        string curr_func_ret_type = "";
+        int during_while = 0;
+    public:
+        Parser();
+        Function* GetFunction(string name, std::vector<string> type_list){
+            Function* f = static_cast<Fuction *>((parser.symbolTable.GetSymbol(name));
+            if (f == nullptr) {
+                errorUndefFunc(yylineno, name);
+                exit(0);
+            }
+            validate_func(f->args_type, type_list, f->name);
+            return f;
+        }
+
+    };
+	Parser parser;
 	extern int yylineno;
 	int yyerror(const char * message);
     extern int yylex();
     void CheckLegalB(int n);
-    int nested_While = 0;
-    Exp* Cast(Exp* exp, string Type);
 %}
 
 %token VOID
@@ -29,8 +68,17 @@
 %token ID
 %token NUM
 %token STRING
-%token LARR
-%token RARR
+%type<exp> NUM
+%type<id> ID
+%type<exp> Exp
+%type<exp> Type
+%type<exp> RetType
+%type<exp> Call
+%type<argument> FormalDecl
+%type<argument_list> FormalsList
+%type<argument_list> Formals
+%type<type_list> ExpList
+
 
 %right ASSIGN
 %left OR
@@ -45,7 +93,7 @@
 %nonassoc ELSE
 
 %%
-Program        : Funcs                                                        {close global scope;}
+Program        : Funcs                                                        {parser.symbolTable.;}
 Funcs          : FuncDecl Funcs                                               {if (yytext.tostring != "") yyerror(nullptr);}
                |                                                              {/* No Action */}
 FuncDecl       : RetType ID LPAREN Formals RPAREN                             {Add func Symbols ID($2), Type($1)}
