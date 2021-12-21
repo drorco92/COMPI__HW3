@@ -99,7 +99,7 @@
 %type<exp> NUM
 %type<id> ID
 %type<exp> Exp
-%type<exp> TYPE
+%type<exp> Type
 %type<exp> RetType
 %type<exp> Call
 %type<exp> TypeAnnotation
@@ -258,21 +258,21 @@ ExpList        : Exp                                                          {
 
                                                                                // TODO: check if this actually works
 Type           : INT                                                          {
-                                                                               $$ = new Exp($1);
+                                                                               $$ = new Exp("INT");
                                                                               }
                | BYTE                                                         {
-                                                                               $$ = new Exp($1);
+                                                                               $$ = new Exp("BYTE");
                                                                               }
                | BOOL                                                         {
-                                                                               $$ = new Exp($1);
+                                                                               $$ = new Exp("BOOL");
                                                                               }
 
 
 TypeAnnotation : CONST                                                        {
-                                                                                  $$ = new Exp($1);
+                                                                                  $$ = new Exp("CONST");
                                                                               }
                |                                                              {
-                                                                                  /* No Action */
+                                                                                  /* No Action */ //TODO: Check if need to add as ""
                                                                               }
 
 
@@ -324,7 +324,7 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   $$ = do_op($1, $3, RELOP);
                                                                               }
                | LPAREN TYPE RPAREN Exp                                       {
-                                                                                  $$ = NewCastedExp($4, $2);
+                                                                                  $$ = NewCastedExp($4, $2->Type);
                                                                               }
 ScopeStart      :                                                             {
                                                                                   parser.symbolTable.OpenScope();
