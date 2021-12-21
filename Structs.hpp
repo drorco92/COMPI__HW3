@@ -34,9 +34,10 @@ struct Id {
 };
 
 struct Argument {
+    string annotation;
     string name;
     string type;
-    Argument(const string& name, const string& type) : this.name(name), this.type(type) {};
+    Argument(const string& name, const string& type, const string& annotation) : this.annotation(annotation), this.name(name), this.type(type) {};
 };
 
 struct ArgumentList {

@@ -10,7 +10,9 @@
 #include <string>
 #include <stack>
 #include "hw3_output.hpp"
+#include "Structs.hpp"
 
+typedef std::vector<Argument> ArgVec;
 typedef std::vector<Symbol> SymbolsVector;
 typedef std::vector<Symbol_Table> TableVector;
 typedef stack<int> OffsetStack;
@@ -23,25 +25,23 @@ class Symbol() {
 
 public:
     Symbol(string name, int offset, string type);
-    virtual void print(string);
-    virtual void printi(int);
+    virtual void print();
 }
 
 class Variable : public Symbol {
     string type_annotation;
 public:
     Variable(string name, int offset, string type, string type_annotation);
-    void print(string) override;
-    void print(int) override;
+    void print() override;
 };
 
 class Function : public Symbol {
-    std::vector<string> arguments_types;
+    ArgVec* args;
     string return_type;
 public:
-    Function(string name, string return_type, std::vector<string> arguments_types);
-    void print(string) override;
-    void print(int) override;
+    Function(string name, string return_type, ArgVec& args);
+    ~Function();
+    void print() override;
 };
 
 
@@ -67,8 +67,8 @@ public:
     void CloseScope();
     void CloseGlobal();
     void AddSymbol(const string& name, const string& type);                                     //variable symbol
-    void AddSymbol(string name, string return_type, std::vector<string> arguments_types);       //function symbol
-    void AddArgsSymbols(std::vector<string> arguments_types);
+    void AddSymbol(string name, string return_type, ArgVec& args);       //function symbol
+    void AddArgsSymbols(StringVector& args_names, ArgVec& args);
     void IsNameExists(const string& name, bool is_func);
 };
 
