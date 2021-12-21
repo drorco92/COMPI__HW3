@@ -54,9 +54,9 @@ typedef union Node
 {
     Exp* exp;
     Id* id;
-    FuncArg* funcArg;
-    FuncArgsList* funcArgsList;
-    TypeList* typeList;
+    Argument* argument;
+    ArgumentList* argument_list;
+    TypeList* type_list;
     int val;
 } STYPE;
 
