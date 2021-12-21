@@ -99,9 +99,10 @@
 %type<exp> NUM
 %type<id> ID
 %type<exp> Exp
-%type<exp> Type
+%type<exp> TYPE
 %type<exp> RetType
 %type<exp> Call
+%type<exp> TypeAnnotation
 %type<argument> FormalDecl
 %type<argument_list> FormalsList
 %type<argument_list> Formals
@@ -155,7 +156,7 @@ RetType        : Type                                                         {
                                                                                   $$ = new Exp($1->type);
                                                                               }
                | VOID                                                         {
-                                                                                  $$ = new Exp($1->type);
+                                                                                  $$ = new Exp($1);
                                                                               }
 
 
@@ -191,7 +192,7 @@ Statements     : Statement                                                    {
                                                                               }
 
 
-Statement      : LBRACE New_Scope Statements RBRACE End_Scope                 {
+Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   /* No Action */
                                                                               }
                | TypeAnnotation Type ID SC                                    {
@@ -322,7 +323,7 @@ Exp            : LPAREN Exp RPAREN                                            {
                | Exp RELOP Exp                                                {
                                                                                   $$ = do_op($1, $3, RELOP);
                                                                               }
-               | LPAREN TYPE RPAREN EXP                                       {
+               | LPAREN TYPE RPAREN Exp                                       {
                                                                                   $$ = NewCastedExp($4, $2);
                                                                               }
 ScopeStart      :                                                             {
