@@ -3,7 +3,8 @@
 //
 
 #include "SymbolTables.hpp"
-
+#include "hw3_output.hpp"
+#include "Structs.hpp"
 Symbol::Symbol(string name, int offset, string type) : name(name), offset(offset), type(type) {};
 void Symbol::print(string) {}
 void Symbol::print(int) {}

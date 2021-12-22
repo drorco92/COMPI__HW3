@@ -9,8 +9,7 @@
 #include <vector>
 #include <string>
 #include <stack>
-#include "hw3_output.hpp"
-#include "Structs.hpp"
+
 
 class Symbol {
     string name;

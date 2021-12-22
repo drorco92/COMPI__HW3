@@ -468,6 +468,6 @@ Exp* NewCastedExp(const Exp& exp, const string& type) {
     if((type == "BYTE" || type == "INT") && (eType == "BYTE" || eType == "INT")){
         return new Exp(type);
     }
-    errorMismatch(lineno);
+    errorMismatch(yylineno);
     exit(1);
 }
