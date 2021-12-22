@@ -35,7 +35,7 @@
 
 
 
-    string[7] OperationType = {
+/*    string[7] OperationType = {
         "", // NONE
         "ASSIGN",
         "RELOP",
@@ -43,14 +43,14 @@
         "OR",
         "NOT",
         "BINOP",
-    };
+    };*/
 
     class Parser {
     private:
 
         int loopCount = 0;
     public:
-        SymbolTables symbolTable;
+        TablesList symbolTable;
         Parser();
         string ScopeReturnType = "";
         string ExpType;
