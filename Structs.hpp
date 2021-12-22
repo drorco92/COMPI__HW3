@@ -10,6 +10,13 @@
 #include <string>
 #include <vector>
 
+struct Argument {
+    string annotation;
+    string name;
+    string type;
+    Argument(const string& annotation, const string& name, const string& type) : annotation(annotation), name(name), type(type) {};
+};
+
 typedef std::vector<Argument> ArgVector;
 typedef std::vector<Argument> TypeVector;
 typedef std::vector<string> StringVector;
@@ -31,15 +38,10 @@ struct Exp {
 
 struct Id {
     string name;
-    explicit Id(const string& name): this.name(name);
+    explicit Id(const string& name): name(name);
 };
 
-struct Argument {
-    string annotation;
-    string name;
-    string type;
-    Argument(const string& annotation, const string& name, const string& type) : this.annotation(annotation), this.name(name), this.type(type) {};
-};
+
 
 struct ArgumentList {
     ArgVector arg_vec;
