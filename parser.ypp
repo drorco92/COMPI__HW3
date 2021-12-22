@@ -1,6 +1,7 @@
 %{
 	#include "hw3_output.hpp"
 	#include "Structs.hpp"
+	#include "SymbolTables.hpp"
 	using namespace output;
 
     extern int yylineno;
