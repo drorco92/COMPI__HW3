@@ -11,26 +11,26 @@
 #include <vector>
 
 struct Argument {
-    string name;
-    string type;
-    string annotation;
-    Argument(const string& annotation, const string& name, const string& type) : name(name), type(type) ,annotation(annotation){};
+    std::string name;
+    std::string type;
+    std::string annotation;
+    Argument(const std::string& annotation, const std::string& name, const std::string& type) : name(name), type(type) ,annotation(annotation){};
 };
 
 typedef std::vector<Argument> ArgVector;
 typedef std::vector<Argument> TypeVector;
-typedef std::vector<string> StringVector;
+typedef std::vector<string> std::stringVector;
 
 struct Exp {
-    string name;
-    string type;
+    std::string name;
+    std::string type;
     int val;
-    string annotation;
+    std::string annotation;
 
-    explicit Exp(const string& type) {
+    explicit Exp(const std::string& type) {
         this->type = /*string(type)*/type;
     }
-    Exp(const Exp& exp, const string& type) {
+    Exp(const Exp& exp, const std::string& type) {
         this->name = exp.name;
         this->type = /*string(type)*/type;
         this->val = exp.val;
@@ -38,8 +38,8 @@ struct Exp {
 };
 
 struct Id {
-    string name;
-    explicit Id(const string& name): name(name) {};
+    std::string name;
+    explicit Id(const std::string& name): name(name) {};
 };
 
 
