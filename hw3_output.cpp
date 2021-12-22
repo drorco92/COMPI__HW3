@@ -1,5 +1,6 @@
 #include <iostream>
 #include "hw3_output.hpp"
+#include "Structs.hpp"
 #include <sstream>
 
 using namespace std;
@@ -12,11 +13,11 @@ void output::printID(const string& id, int offset, const string& type) {
     cout << id << " " << type <<  " " << offset <<  endl;
 }
 
-string typeListToString(const std::vector<string>& argTypes) {
+string typeListToString(const ArgVector & argTypes) {
     stringstream res;
     res << "(";
     for(int i = 0; i < argTypes.size(); ++i) {
-        res << argTypes[i];
+        res << argTypes[i].type;
         if (i + 1 < argTypes.size())
             res << ",";
     }
@@ -36,7 +37,7 @@ string valueListsToString(const std::vector<string>& values) {
     return res.str();
 }
 
-string output::makeFunctionType(const string& retType, std::vector<string>& argTypes) {
+string output::makeFunctionType(const string& retType, ArgVector& argTypes) {
     stringstream res;
     res << typeListToString(argTypes) << "->" << retType;
     return res.str();
@@ -66,7 +67,7 @@ void output::errorMismatch(int lineno){
     cout << "line " << lineno << ":" << " type mismatch" << endl;
 }
 
-void output::errorPrototypeMismatch(int lineno, const string& id, std::vector<string>& argTypes) {
+void output::errorPrototypeMismatch(int lineno, const string& id, ArgVector& argTypes) {
     cout << "line " << lineno << ": prototype mismatch, function " << id << " expects arguments " << typeListToString(argTypes) << endl;
 }
 

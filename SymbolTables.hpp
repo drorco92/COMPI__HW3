@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <stack>
+#include "Structs.hpp"
 
 
 class Symbol {

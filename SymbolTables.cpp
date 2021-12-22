@@ -22,7 +22,7 @@ Function::~Function() {
 }
 
 void Function::print() {
-    output::printID(name, offset, output::makeFunctionType(this->return_type, this->arguments_types));
+    output::printID(name, offset, output::makeFunctionType(this->return_type, this->args));
 }
 
 //======================================================================================
