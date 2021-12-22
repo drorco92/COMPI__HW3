@@ -13,12 +13,11 @@
 
 
 class Symbol {
-    string name;
-    int offset;
-    string type;
-
 public:
-    Symbol(string name, int offset, string type);
+    std::string name;
+    int offset;
+    std::string type;
+    Symbol(std::string name, int offset, std::string type);
     virtual void print();
 };
 
@@ -42,17 +41,17 @@ typedef stack<int> OffsetStack;
 
 
 class Variable : public Symbol {
-    string type_annotation;
 public:
-    Variable(string name, int offset, string type, string type_annotation);
+    std::string type_annotation;
+    Variable(std::string name, int offset, std::string type, std::string type_annotation);
     void print() override;
 };
 
 class Function : public Symbol {
-    ArgVec* args;
-    string return_type;
 public:
-    Function(string name, string return_type, ArgVec& args);
+    ArgVec* args;
+    std::string return_type;
+    Function(std::string name, std::string return_type, ArgVec& args);
     ~Function();
     void print() override;
 };
@@ -66,15 +65,15 @@ public:
     OffsetStack offsets;
     TableVector tables;
     Symbol_Table sym_table;
-    Symbol* GetSymbol(const string& name, bool is_func);
+    Symbol* GetSymbol(const std::string& name, bool is_func);
     void OpenScope();
     void OpenGlobal();
     void CloseScope();
     void CloseGlobal();
-    void AddSymbol(const string& name, const string& type);                                     //variable symbol
-    void AddSymbol(string name, string return_type, ArgVec& args);       //function symbol
-    void AddArgsSymbols(StringVector& args_names, ArgVec& args);
-    void IsNameExists(const string& name, bool is_func);
+    void AddSymbol(const std::string& annotation, const std::string& name, const std::string& type);                                     //variable symbol
+    void AddSymbol(std::string name, std::string return_type, ArgVec& args);       //function symbol
+    void AddArgsSymbols(ArgVec& args);
+    void IsNameExists(const std::string& name, bool is_func);
 };
 
 #endif //COMPI__HW3_SYMBOLTABLES_HPP

@@ -98,9 +98,9 @@ Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
 }
 
 
-void TablesList::AddSymbol(const string& name, const string& type) {
+void TablesList::AddSymbol(const string& annotation, const string& name, const string& type) {
     IsNameExists(name, false);
-    Variable* variable_symbol = new Variable(name, type, this->offsets.top());
+    Variable* variable_symbol = new Variable(name, this->offsets.top(), type, annotation );
     this->tables.back()->symbols.push_back(variable_symbol);
     this->offsets.top() += 1;
 }
