@@ -7,6 +7,16 @@
     int yyerror(const char * message);
     extern int yylex();
     void CheckLegalB(int n);
+    Exp* NewCastedExp(const Exp& exp, const string& type);
+    void validate_func(ArgVector expected, ArgVector current, string name);
+    Function* get_func(string name, TypeList typelist);
+    void vaildate_type(string x, string y);
+    Exp* do_op(Exp* var1, Exp* var2, Operation op);
+    string get_var_type(string var_name);
+    void validate_assign(string var1, string var2);
+    bool is_number(Exp* var);
+    int yyerror(const char* message);
+    int main();
 
     typedef enum {
         NONE,
