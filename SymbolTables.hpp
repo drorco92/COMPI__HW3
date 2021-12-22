@@ -22,7 +22,7 @@ public:
     virtual void print();
 };
 
-
+typedef std::vector<Symbol> SymbolsVector;
 
 class Symbol_Table {
 public:
@@ -35,7 +35,6 @@ public:
 
 
 typedef std::vector<Argument> ArgVec;
-typedef std::vector<Symbol> SymbolsVector;
 typedef std::vector<Symbol_Table> TableVector;
 typedef stack<int> OffsetStack;
 

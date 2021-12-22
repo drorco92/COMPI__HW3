@@ -4,6 +4,19 @@
 	#include "SymbolTables.hpp"
 	using namespace output;
 
+
+
+
+    typedef enum {
+        ENUM_NONE,
+        ENUM_ASSIGN,
+        ENUM_RELOP,
+        ENUM_AND,
+        ENUM_OR,
+        ENUM_NOT,
+        ENUM_BINOP,
+    }Operation;
+
     extern int yylineno;
     extern char* yytext;
     int yyerror(const char * message);
@@ -20,17 +33,9 @@
     int yyerror(const char* message);
     int main();
 
-    typedef enum {
-        NONE,
-        ASSIGN,
-        RELOP,
-        AND,
-        OR,
-        NOT,
-        BINOP,
-    }Operation;
 
-    String[7] OperationType = {
+
+    string[7] OperationType = {
         "", // NONE
         "ASSIGN",
         "RELOP",
@@ -42,13 +47,13 @@
 
     class Parser {
     private:
-        SymbolTable symbolTable;
-        string ScopeReturnType = "";
+
         int loopCount = 0;
     public:
-
+        SymbolTables symbolTable;
         Parser();
-
+        string ScopeReturnType = "";
+        string ExpType;
         void AssertReturn(string& retType){
             if (retType != ScopeReturnType)
             {
@@ -140,7 +145,7 @@ Program        : Funcs                                                        {
 
 
 Funcs          : FuncDecl Funcs                                               {
-                                                                                  ytext.tostring == "" ? :yyerror(nullptr);
+                                                                                  yytext.tostring == "" ? :yyerror(nullptr);
                                                                               }
                |                                                              {
                                                                                   /* No Action */
@@ -148,7 +153,7 @@ Funcs          : FuncDecl Funcs                                               {
 
 
 FuncDecl       : RetType ID LPAREN Formals RPAREN                             {
-                                                                                  parser.AddSymbol($2->name, $1->type, $4->arguments);
+                                                                                  parser.symbolTable.AddSymbol($2->name, $1->type, $4->arguments);
                                                                               }
                  LBRACE                                                       {
                                                                                   parser.symbolTable.OpenScope();
@@ -288,50 +293,65 @@ TypeAnnotation : CONST                                                        {
 
 Exp            : LPAREN Exp RPAREN                                            {
                                                                                   $$ = new Exp($2->m_type);
+                                                                                  parser.ExpType = "INT";
                                                                               }
                | Exp BINOP_ADD Exp                                            {
                                                                                   $$ = do_op($1, $3, BINOP);
+                                                                                  parser.ExpType = "INT";
                                                                               }
                | Exp BINOP_MULTIPLY Exp                                       {
                                                                                   $$ = do_op($1, $3, BINOP);
+                                                                                  parser.ExpType = "INT";
                                                                               }
                | ID                                                           {
                                                                                   $$ = new Exp(get_var_type($1->name));
                                                                                   $$->name = $1->name;
+                                                                                  parser.ExpType = get_var_type($1->name);
                                                                               }
                | Call                                                         {
                                                                                   $$ = new Exp($1->type);
+                                                                                  parser.ExpType = $1->type;
                                                                               }
                | NUM                                                          {
                                                                                   $$ = new Exp("INT");
+                                                                                  parser.ExpType = "INT";
                                                                               }
                | NUM B                                                        {
                                                                                 CheckLegalB(yylval.val))
                                                                                   $$ = new Exp("BYTE");
+                                                                                  parser.ExpType = "BYTE";
                                                                               }
                | STRING                                                       {
                                                                                   $$ = new Exp("STRING");
+                                                                                  parser.ExpType = "STRING";
                                                                               }
                | TRUE                                                         {
                                                                                   $$ = new Exp("BOOL");
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | FALSE                                                        {
                                                                                   $$ = new Exp("BOOL");
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | NOT Exp                                                      {
-                                                                                  $$ = do_op($2, $2, NOT);
+                                                                                  $$ = do_op($2, $2, ENUM_NOT);
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | Exp AND Exp                                                  {
-                                                                                  $$ = do_op($1, $3, AND);
+                                                                                  $$ = do_op($1, $3, ENUM_AND);
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | Exp OR Exp                                                   {
-                                                                                  $$ = do_op($1, $3, OR);
+                                                                                  $$ = do_op($1, $3, ENUM_OR);
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | Exp RELOP_EQUAL Exp                                          {
-                                                                                  $$ = do_op($1, $3, RELOP);
+                                                                                  $$ = do_op($1, $3, ENUM_RELOP);
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | Exp RELOP Exp                                                {
-                                                                                  $$ = do_op($1, $3, RELOP);
+                                                                                  $$ = do_op($1, $3, ENUM_RELOP);
+                                                                                  parser.ExpType = "BOOL";
                                                                               }
                | LPAREN Type RPAREN Exp                                       {
                                                                                   $$ = NewCastedExp($4, $2->Type);
@@ -397,26 +417,27 @@ Exp* do_op(Exp* var1, Exp* var2, Operation op) {
         goto err;
     }
     switch(op){
-        case(ASSIGN):
+        case(ENUM_ASSIGN):
             validate_assign(var1->type, var2->type);
             return var1;
 
-        case(RELOP):
+        case(ENUM_RELOP):
             if (is_number(var1) && is_number(var2))
                 return new Exp("BOOL");
             break;
 
-         case(AND): case(POR):
+         case(ENUM_AND):
+         case(ENUM_OR):
             if (var1->type == "BOOL" && var2->type == "BOOL")
                 return new Exp("BOOL");
             break;
 
-        case(NOT):
+        case(ENUM_NOT):
             if (var1->type == "BOOL")
                 return new Exp("BOOL");
             break;
 
-        case(BINOP):
+        case(ENUM_BINOP):
             if (is_number(var1) && is_number(var2)){
                 if(var1->type == "INT" || var2->type == "INT")
                     return new Exp("INT");
