@@ -187,12 +187,12 @@ Formals        : FormalsList                                                  {
 
 FormalsList    : FormalDecl                                                   {
                                                                                   $$ = new ArgumentList();
-                                                                                  $$->arguments.push_back($1->argument);
+                                                                                  $$->arguments.push_back($1);
                                                                               }
                | FormalDecl COMMA FormalsList                                 {
                                                                                   $$ = new ArgumentList();
                                                                                   $$->arguments = $3->arguments;
-                                                                                  $$->arguments.push_back($1);
+                                                                                  $$->arguments.push_back(*$1);
                                                                               }
 
 
@@ -220,7 +220,7 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                  parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
-                                                                                  validate_assign($1->type, $3->type);
+                                                                                  validate_assign(get_var_type($1->name), $3->type);
                                                                               }
                | Call SC                                                      {
                                                                                   /* No Action */
@@ -254,7 +254,7 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 
 Call           : ID LPAREN ExpList RPAREN                                     {
                                                                                   // TODO: Change
-                                                                                  Function* f = get_func($1->name, $3->arguments);
+                                                                                  Function* f = get_func($1->name, $3);
                                                                                   $$ = new Exp(f->return_type);
                                                                                }
                | ID LPAREN RPAREN                                             {
@@ -265,10 +265,13 @@ Call           : ID LPAREN ExpList RPAREN                                     {
 
 
 ExpList        : Exp                                                          {
-                                                                                  /* No Action */
+                                                                                  $$ = new ArgVector();
+                                                                                  $$->push_back($1);
                                                                               }
                | Exp COMMA ExpList                                            {
-                                                                                  /* No Action */
+                                                                                  $$ = new ArgVector();
+                                                                                  $$ = $3;
+                                                                                  $$->push_back($1);
                                                                               }
 
                                                                                // TODO: check if this actually works
