@@ -12,13 +12,7 @@
 #include "hw3_output.hpp"
 #include "Structs.hpp"
 
-typedef std::vector<Argument> ArgVec;
-typedef std::vector<Symbol> SymbolsVector;
-typedef std::vector<Symbol_Table> TableVector;
-typedef stack<int> OffsetStack;
-
-
-class Symbol() {
+class Symbol {
     string name;
     int offset;
     string type;
@@ -27,6 +21,26 @@ public:
     Symbol(string name, int offset, string type);
     virtual void print();
 }
+
+
+
+class Symbol_Table {
+public:
+    Symbol_Table* parent = nullptr;
+    SymbolsVector symbols ;
+    Symbol_Table() = default;
+    explicit Symbol_Table(Symbol_Table* parent) : parent(parent) {}
+    ~Symbol_Table() = default;
+};
+
+
+typedef std::vector<Argument> ArgVec;
+typedef std::vector<Symbol> SymbolsVector;
+typedef std::vector<Symbol_Table> TableVector;
+typedef stack<int> OffsetStack;
+
+
+
 
 class Variable : public Symbol {
     string type_annotation;
@@ -46,21 +60,13 @@ public:
 
 
 
-class Symbol_Table {
-public:
-    Symbol_Table* parent = nullptr;
-    SymbolsVector symbols ;
-    Symbol_Table() = default;
-    explicit Symbol_Table(Symbol_Table* parent) : this.parent(parent) {}
-    ~Symbol_Table() = default;
-};
 
 
 class TablesList {
 public:
     OffsetStack offsets;
     TableVector tables;
-    Symbol_Table();
+    Symbol_Table sym_table;
     Symbol* GetSymbol(const string& name, bool is_func);
     void OpenScope();
     void OpenGlobal();
