@@ -5,6 +5,7 @@
 	using namespace output;
 
     extern int yylineno;
+    extern char* yytext;
     int yyerror(const char * message);
     extern int yylex();
     void CheckLegalB(int n);

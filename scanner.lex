@@ -1,7 +1,8 @@
 %{
 #include "hw3_output.hpp"
 #include "parser.tab.hpp"
-using namespace output;
+#include "Structs.hpp"
+
 %}
 
 %option yylineno
@@ -36,8 +37,16 @@ continue                      return CONTINUE;
 \>|\>=|\<|\<=                 return RELOP;
 \+|\-                         return BINOP_ADD;
 \/|\*                         return BINOP_MULTIPLY;
-[a-zA-Z][a-zA-Z0-9]*          return ID;
-0|[1-9][0-9]*                 return NUM;
+[a-zA-Z][a-zA-Z0-9]*          {
+                                string name(yytext);
+                                yylval.id = new Id(name);
+                                return ID;
+                              }
+
+0|[1-9][0-9]*                 {
+                                yylval.val = atoi(yytext);
+                                return NUM;
+                              }
 \"([^\n\r\"\\]|\\[rnt"\\])+\" return STRING;
 [\t\r\n ]                     ;
 \/\/[^\r\n]*(\r|\n|\r\n)?     ;

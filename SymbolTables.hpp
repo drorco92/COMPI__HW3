@@ -20,7 +20,7 @@ class Symbol {
 public:
     Symbol(string name, int offset, string type);
     virtual void print();
-}
+};
 
 
 
