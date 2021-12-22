@@ -35,7 +35,7 @@ public:
 
 typedef std::vector<Argument> ArgVec;
 typedef std::vector<Symbol_Table> TableVector;
-typedef stack<int> OffsetStack;
+typedef std::stack<int> OffsetStack;
 
 
 
@@ -62,6 +62,7 @@ public:
 
 class TablesList {
 public:
+    TablesList();
     OffsetStack offsets;
     TableVector tables;
     Symbol_Table sym_table;

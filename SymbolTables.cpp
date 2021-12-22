@@ -6,8 +6,8 @@
 #include "hw3_output.hpp"
 #include "Structs.hpp"
 Symbol::Symbol(string name, int offset, string type) : name(name), offset(offset), type(type) {};
-void Symbol::print(string) {}
-void Symbol::print(int) {}
+void Symbol::print() {}
+
 //======================================================================================
 Variable::Variable(string name, int offset, string type, string type_annotation) : Symbol(name, offset, type), type_annotation(type_annotation) {}
 void Variable::print() {
@@ -15,14 +15,14 @@ void Variable::print() {
 }
 
 //======================================================================================
-Function::Function(string name, string return_type, ArgVec& args) : Symbol(name, 0, "FUNCTION"), return_type(return_type), args(args){}
+Function::Function(string name, string return_type, ArgVec& args) : Symbol(name, 0, "FUNCTION"), return_type(return_type), args(&args){}
 
 Function::~Function() {
     delete this->args;
 }
 
 void Function::print() {
-    output::printID(name, offset, output::makeFunctionType(this->return_type, this->args));
+    output::printID(name, offset, output::makeFunctionType(this->return_type, *this->args));
 }
 
 //======================================================================================
@@ -47,13 +47,13 @@ TablesList::TablesList() {
 
 void TablesList::OpenGlobal() {
     Symbol_Table* first_table = new Symbol_Table(nullptr);
-    this->tables.push_back(first_table);
+    this->tables.push_back(*first_table);
     this->offsets.push(0)
 }
 
 void TablesList::OpenScope() {
     Symbol_Table* new_table = new Symbol_Table(this->tables.back());
-    this->tables.push_back(new_table);
+    this->tables.push_back(*new_table);
     this->offsets.push(this->offsets.top());
 }
 

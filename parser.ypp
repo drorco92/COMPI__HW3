@@ -123,7 +123,7 @@
 %type<argument> FormalDecl
 %type<argument_list> FormalsList
 %type<argument_list> Formals
-%type<type_list> ExpList
+%type<argument_list> ExpList
 
 
 %right ASSIGN
@@ -187,7 +187,7 @@ Formals        : FormalsList                                                  {
 
 FormalsList    : FormalDecl                                                   {
                                                                                   $$ = new ArgumentList();
-                                                                                  $$->arguments.push_back($1);
+                                                                                  $$->arguments.push_back(*$1);
                                                                               }
                | FormalDecl COMMA FormalsList                                 {
                                                                                   $$ = new ArgumentList();
@@ -266,12 +266,12 @@ Call           : ID LPAREN ExpList RPAREN                                     {
 
 ExpList        : Exp                                                          {
                                                                                   $$ = new ArgVector();
-                                                                                  $$->push_back($1);
+                                                                                  $$->push_back(*$1);
                                                                               }
                | Exp COMMA ExpList                                            {
                                                                                   $$ = new ArgVector();
                                                                                   $$ = $3;
-                                                                                  $$->push_back($1);
+                                                                                  $$->push_back(*$1);
                                                                               }
 
                                                                                // TODO: check if this actually works
@@ -320,7 +320,7 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   parser.ExpType = "INT";
                                                                               }
                | NUM B                                                        {
-                                                                                CheckLegalB(yylval.val));
+                                                                                CheckLegalB(yylval.val);
                                                                                   $$ = new Exp("BYTE");
                                                                                   parser.ExpType = "BYTE";
                                                                               }
@@ -468,7 +468,7 @@ Function* get_func(string name, ArgVector& args){
         errorUndefFunc(yylineno, name);
         exit(0);
     }
-    validate_func(f->args, args, f->name);
+    validate_func(f->arguments, args, f->name);
     return f;
 }
 
