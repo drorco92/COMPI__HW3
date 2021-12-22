@@ -45,13 +45,13 @@ TablesList::TablesList() {
 }
 
 void TablesList::OpenGlobal() {
-    Symbol_Table first_table = new Symbol_Table(nullptr);
+    Symbol_Table* first_table = new Symbol_Table(nullptr);
     this->tables.push_back(first_table);
     this->offsets.push(0)
 }
 
 void TablesList::OpenScope() {
-    Symbol_Table new_table = new Symbol_Table(this->tables.back());
+    Symbol_Table* new_table = new Symbol_Table(this->tables.back());
     this->tables.push_back(new_table);
     this->offsets.push(this->offsets.top());
 }
@@ -68,9 +68,9 @@ void TablesList::CloseScope() {
 
 void TablesList::CloseGlobal() {
     Symbol* main_symbol = GetSymbol("main", true);
-    (Function*) main_func_symbol = (Function*) main_symbol;
-    if(main_symbol == nullptr || main_func_symbol->return_type != "VOID"
-       || !main_func_symbol->arguments_types.empty()) {
+    (Function*) main_symbol = (Function*) main_symbol;
+    if(main_symbol == nullptr || main_symbol->return_type != "VOID"
+       || !main_symbol->arguments_types.empty()) {
         output::errorMainMissing();
         exit(1);
     }
@@ -79,8 +79,8 @@ void TablesList::CloseGlobal() {
 
 
 Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
-    for (vector<Symbol_Table>::iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
-        for (vector<Symbol_Table>::iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
+    for (vector<Symbol_Table>::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
+        for (vector<Symbol_Table>::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
             if(is_func) {
                 if ((*symbol_it)->name == name && (*symbol_it)->type == "FUNC") {
                     return (*symbol_it);
@@ -109,7 +109,7 @@ void TablesList::AddSymbol(const string& name, const string& return_type, ArgVec
 
     ArgVec* args_to_push = new ArgVec();
 
-    for(ArgVec::iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
+    for(ArgVec::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
         IsNameExists((arg_it->name, false);
         args_to_push->push_back(*arg_it);
     }
@@ -120,7 +120,7 @@ void TablesList::AddSymbol(const string& name, const string& return_type, ArgVec
 void TablesList::AddArgsSymbols(ArgVec& args) {
     int args_offset = -1;
 
-    for(ArgVec::iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
+    for(ArgVec::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
         IsNameExists((arg_it->name, false);
         Variable* symbol = new VarSymbol((arg_it->name), (arg_it->type, args_offset));
         this->tables.back()->symbols.push_back(symbol);
