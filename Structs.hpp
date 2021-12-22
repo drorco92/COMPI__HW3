@@ -19,7 +19,7 @@ struct Argument {
 
 typedef std::vector<Argument> ArgVector;
 typedef std::vector<Argument> TypeVector;
-typedef std::vector<string> std::stringVector;
+typedef std::vector<std::string> std::stringVector;
 
 struct Exp {
     std::string name;
