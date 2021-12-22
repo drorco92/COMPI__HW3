@@ -266,12 +266,12 @@ Call           : ID LPAREN ExpList RPAREN                                     {
 
 ExpList        : Exp                                                          {
                                                                                   $$ = new ArgumentList();
-                                                                                  $$->arguments->push_back(*$1);
+                                                                                  $$->arguments.push_back(*$1);
                                                                               }
                | Exp COMMA ExpList                                            {
                                                                                   $$ = new ArgumentList();
                                                                                   $$ = $3;
-                                                                                  $$->arguments->push_back(*$1);
+                                                                                  $$->arguments.push_back(*$1);
                                                                               }
 
                                                                                // TODO: check if this actually works
