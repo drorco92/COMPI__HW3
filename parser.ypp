@@ -254,7 +254,7 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 
 Call           : ID LPAREN ExpList RPAREN                                     {
                                                                                   // TODO: Change
-                                                                                  Function* f = get_func($1->name, $3);
+                                                                                  Function* f = get_func($1->name, *$3);
                                                                                   $$ = new Exp(f->return_type);
                                                                                }
                | ID LPAREN RPAREN                                             {
@@ -265,13 +265,13 @@ Call           : ID LPAREN ExpList RPAREN                                     {
 
 
 ExpList        : Exp                                                          {
-                                                                                  $$ = new ArgVector();
-                                                                                  $$->push_back(*$1);
+                                                                                  $$ = new ArgumentList();
+                                                                                  $$->arguments->push_back(*$1);
                                                                               }
                | Exp COMMA ExpList                                            {
-                                                                                  $$ = new ArgVector();
+                                                                                  $$ = new ArgumentList();
                                                                                   $$ = $3;
-                                                                                  $$->push_back(*$1);
+                                                                                  $$->arguments->push_back(*$1);
                                                                               }
 
                                                                                // TODO: check if this actually works
