@@ -9,7 +9,7 @@
     int yyerror(const char * message);
     extern int yylex();
     void CheckLegalB(int n);
-    Exp* NewCastedExp(const Exp& exp, const string& type);
+    Exp* NewCastedExp(const Exp* exp, const string& type);
     void validate_func(ArgVector expected, ArgVector current, string name);
     Function* get_func(string name, TypeList typelist);
     void vaildate_type(string x, string y);
@@ -448,7 +448,7 @@ Function* get_func(string name, TypeList typelist){
     return f;
 }
 
-void validate_func(ArgVector expected, ArgVector current, string name) {
+void validate_func(ArgVector& expected, ArgVector& current, string name) {
     if (expected.size() != current.size())
     {
         errorPrototypeMismatch(yylineno, name, expected);
@@ -456,14 +456,14 @@ void validate_func(ArgVector expected, ArgVector current, string name) {
     }
     int size = expected.size();
     for(int i=0; i < size; i++){
-        if(expected[i] != current[size-i-1] && !(expected[i] == "INT" && current[size-i-1] == "BYTE")){
+        if(expected[i].type != current[size-i-1].type && !(expected[i].type == "INT" && current[size-i-1].type == "BYTE")){
             errorPrototypeMismatch(yylineno, name, expected);
             exit(1);
         }
     }
 }
 
-Exp* NewCastedExp(const Exp& exp, const string& type) {
+Exp* NewCastedExp(const Exp* exp, const string& type) {
     string eType = exp->type;
     if((type == "BYTE" || type == "INT") && (eType == "BYTE" || eType == "INT")){
         return new Exp(type);
