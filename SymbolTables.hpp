@@ -24,7 +24,7 @@ public:
     virtual void print();
 };
 
-typedef std::vector<Symbol> SymbolsVector;
+typedef std::vector<Symbol*> SymbolsVector;
 
 class Symbol_Table {
 public:
@@ -37,7 +37,7 @@ public:
 
 
 typedef std::vector<Argument> ArgVector;
-typedef std::vector<Symbol_Table> TableVector;
+typedef std::vector<Symbol_Table*> TableVector;
 typedef std::stack<int> OffsetStack;
 
 
@@ -52,7 +52,7 @@ public:
 
 class Function : public Symbol {
 public:
-    ArgVector* args;
+    ArgVector args;
     std::string return_type;
     Function(std::string name, std::string return_type, ArgVector& args);
     ~Function();

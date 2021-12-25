@@ -45,49 +45,52 @@
         "BINOP",
     };*/
 
-class Parser {
-private:
+	class Parser {
+	private:
 
-	int loopCount = 0;
-public:
-	TablesList symbolTable;
-	Parser() = default;
-	string ScopeReturnType = "";
-	string ExpType;
-	void AssertReturn(const string& retType){
-		if (retType != ScopeReturnType)
-		{
-			output::errorMismatch(yylineno);
-			exit(0);
+		int loopCount = 0;
+	public:
+		TablesList symbolTable;
+		Parser() {TablesList* p = new TablesList(); symbolTable = *p;};
+		string ScopeReturnType = "";
+		string ExpType;
+		void AssertReturn(const string& retType){
+			if (retType != ScopeReturnType)
+			{
+				output::errorMismatch(yylineno);
+				exit(0);
+			}
 		}
-	}
-
-	void EnterLoopScope(){
-		loopCount++;
-		symbolTable.OpenScope();
-
-	}
-
-	void ExitLoopScope(){
-		loopCount--;
-		symbolTable.CloseScope();
-	}
-
-	void AssertContinueLegal(){
-		if (loopCount <= 0){
-			output::errorUnexpectedContinue(yylineno);
-			exit(1);
+		void help() {
+			std::cout << "parser exists" << std::endl;
 		}
-	}
 
-	void AssertBreakLegal(){
-		if (loopCount <= 0){
-			output::errorUnexpectedBreak(yylineno);
-			exit(1);
+		void EnterLoopScope(){
+			loopCount++;
+			symbolTable.OpenScope();
+
 		}
-	}
 
-};
+		void ExitLoopScope(){
+			loopCount--;
+			symbolTable.CloseScope();
+		}
+
+		void AssertContinueLegal(){
+			if (loopCount <= 0){
+				output::errorUnexpectedContinue(yylineno);
+				exit(1);
+			}
+		}
+
+		void AssertBreakLegal(){
+			if (loopCount <= 0){
+				output::errorUnexpectedBreak(yylineno);
+				exit(1);
+			}
+		}
+
+	};
 	Parser parser;
 
 %}
@@ -139,15 +142,17 @@ public:
 
 %%
 Program        : Funcs                                                        {
-                                                                                  parser.symbolTable.CloseGlobal();
+																				  parser.symbolTable.CloseGlobal();
                                                                               }
 
 
 Funcs          : FuncDecl Funcs                                               {
-                                                                                  string(yytext) == "" ? :yyerror(nullptr);
+																				  /* No Action */
                                                                               }
                |                                                              {
-                                                                                  /* No Action */
+                                                                                  if(parser.ScopeReturnType != "") {
+                                                                                    yyerror(nullptr);
+                                                                                  }
                                                                               }
 
 
@@ -159,14 +164,11 @@ FuncDecl       : RetType ID LPAREN Formals RPAREN                             {
                                                                                   parser.ScopeReturnType = $1->type;
                                                                                   parser.symbolTable.AddArgsSymbols($4->arguments);
                                                                               }
-                 Statements                                                   {
-                                                                                  /* No Action */
-                                                                              }
-                 RBRACE                                                       {
+                 Statements RBRACE                                                
+																			  {
                                                                                   parser.ScopeReturnType = "";
                                                                                   parser.symbolTable.CloseScope();
                                                                               }
-
 
 RetType        : Type                                                         {
                                                                                   $$ = new Exp($1->type);
@@ -196,7 +198,7 @@ FormalsList    : FormalDecl                                                   {
 
 
 FormalDecl     : TypeAnnotation Type ID                                       {
-                                                                                  $$ = new Argument($1->annotation, $2->type, $3->name);
+                                                                                  $$ = new Argument($1->annotation, $3->name, $2->type);
                                                                               }
 
 
@@ -212,7 +214,7 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   /* No Action */
                                                                               }
                | TypeAnnotation Type ID SC                                    {
-                                                                                 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
+																				 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | TypeAnnotation Type ID ASSIGN Exp SC                         {
                                                                                  validate_assign($2->type, $5->type);
@@ -290,7 +292,7 @@ TypeAnnotation : CONST                                                        {
                                                                                   $$ = new Exp("CONST");
                                                                               }
                |                                                              {
-                                                                                  /* No Action */ //TODO: Check if need to add as ""
+                                                                                  $$ = new Exp("");
                                                                               }
 
 
@@ -468,7 +470,7 @@ Function* get_func(string name, ArgVector& args){
         errorUndefFunc(yylineno, name);
         exit(0);
     }
-    validate_func(*f->args, args, f->name);
+    validate_func(f->args, args, f->name);
     return f;
 }
 
