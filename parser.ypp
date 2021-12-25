@@ -23,8 +23,8 @@
     extern int yylex();
     void CheckLegalB(int n);
     Exp* NewCastedExp(const Exp* exp, const string& type);
-    void validate_func(ArgVector expected, ArgVector current, string name);
     Function* get_func(string name, ArgVector& args);
+	void validate_func(ArgVector& expected, ArgVector& current, string name);
     void vaildate_type(string x, string y);
     Exp* do_op(Exp* var1, Exp* var2, Operation op);
     string get_var_type(string var_name);
@@ -45,50 +45,49 @@
         "BINOP",
     };*/
 
-    class Parser {
-    private:
+class Parser {
+private:
 
-        int loopCount = 0;
-    public:
-        TablesList symbolTable;
-        Parser();
-        string ScopeReturnType = "";
-        string ExpType;
-        void AssertReturn(const string& retType){
-            if (retType != ScopeReturnType)
-            {
-                errorMismatch(yylineno);
-                exit(0);
-            }
-        }
+	int loopCount = 0;
+public:
+	TablesList symbolTable;
+	Parser() = default;
+	string ScopeReturnType = "";
+	string ExpType;
+	void AssertReturn(const string& retType){
+		if (retType != ScopeReturnType)
+		{
+			output::errorMismatch(yylineno);
+			exit(0);
+		}
+	}
 
-        void EnterLoopScope(){
-            loopCount++;
-            symbolTable.OpenScope();
+	void EnterLoopScope(){
+		loopCount++;
+		symbolTable.OpenScope();
 
-        }
+	}
 
-        void ExitLoopScope(){
-            loopCount--;
-            symbolTable.CloseScope();
-        }
+	void ExitLoopScope(){
+		loopCount--;
+		symbolTable.CloseScope();
+	}
 
-        void AssertContinueLegal(){
-            if (loopCount <= 0){
-                errorUnexpectedContinue(yylineno);
-                exit(1);
-            }
-        }
+	void AssertContinueLegal(){
+		if (loopCount <= 0){
+			output::errorUnexpectedContinue(yylineno);
+			exit(1);
+		}
+	}
 
-        void AssertBreakLegal(){
-            if (loopCount <= 0){
-                errorUnexpectedBreak(yylineno);
-                exit(1);
-            }
-        }
+	void AssertBreakLegal(){
+		if (loopCount <= 0){
+			output::errorUnexpectedBreak(yylineno);
+			exit(1);
+		}
+	}
 
-    };
-
+};
 	Parser parser;
 
 %}

@@ -10,6 +10,9 @@
 #include <string>
 #include <stack>
 #include "Structs.hpp"
+#include "hw3_output.hpp"
+
+extern int yylineno;
 
 
 class Symbol {
@@ -76,5 +79,8 @@ public:
     void AddArgsSymbols(ArgVector& args);
     void IsNameExists(const std::string& name, bool is_func);
 };
+
+
+
 
 #endif //COMPI__HW3_SYMBOLTABLES_HPP
