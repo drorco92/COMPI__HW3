@@ -55,14 +55,11 @@
 		string ScopeReturnType = "";
 		string ExpType;
 		void AssertReturn(const string& retType){
-			if (retType != ScopeReturnType)
+			if (retType != ScopeReturnType && !(ScopeReturnType == "INT" && retType == "BYTE"))
 			{
 				output::errorMismatch(yylineno);
 				exit(0);
 			}
-		}
-		void help() {
-			std::cout << "parser exists" << std::endl;
 		}
 
 		void EnterLoopScope(){
@@ -142,6 +139,7 @@
 
 %%
 Program        : Funcs                                                        {
+
 																				  parser.symbolTable.CloseGlobal();
                                                                               }
 
@@ -230,21 +228,22 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   parser.AssertReturn("VOID");
                                                                               }
                | RETURN Exp SC                                                {
-                                                                                  parser.AssertReturn($2->type);
+																				  if(parser.ScopeReturnType == "VOID") {
+																					output::errorMismatch(yylineno);
+																					exit(1);
+																				  }
+																				  parser.AssertReturn($2->type);
                                                                               }
-               | IF LPAREN Exp RPAREN ScopeStart Statement ScopeEnd           {
-                                                                                  vaildate_type($3->type, "BOOL");
-                                                                              }
-               | IF LPAREN Exp RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd                           
-									                                          {
-                                                                                  vaildate_type($3->type, "BOOL"); // Delete
-                                                                              }
-               | WHILE LPAREN Exp RPAREN ScopeEnd                             {
-                                                                                  vaildate_type($3->type, "BOOL");
+               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd
+               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd                           
+               | WHILE LPAREN Exp CheckBool RPAREN                             
+																			  {
                                                                                   parser.EnterLoopScope();
                                                                               }
-                Statement
-                ScopeEnd
+				Statement 
+																			  {
+																				  parser.ExitLoopScope();
+																			  }
                | BREAK SC                                                     {
                                                                                   parser.AssertBreakLegal();
                                                                               }
@@ -369,6 +368,10 @@ ScopeStart      :                                                             {
 ScopeEnd        :                                                             {
                                                                                   parser.symbolTable.CloseScope();
                                                                               }
+																			  
+CheckBool		:															  {
+																				vaildate_type(parser.ExpType, "BOOL");
+																			  }
 
 
 %%
@@ -459,7 +462,7 @@ err:
 void vaildate_type(string x, string y){
     if (x != y)
     {
-        output::errorMismatch(yylineno);
+		output::errorMismatch(yylineno);
         exit(0);
     }
 }

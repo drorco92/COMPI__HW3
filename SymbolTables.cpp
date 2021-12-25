@@ -32,7 +32,7 @@ TablesList::TablesList() {
     this->offsets = stack<int>();
     this->tables = TableVector();
     this->OpenGlobal();
-	ArgVector print_args = ArgVector();//TODO do i need 'new' here?
+	ArgVector print_args = ArgVector();
 	print_args.push_back(Argument("","arguments", "STRING"));
     AddSymbol("print", "VOID", print_args);
     ArgVector printi_args = ArgVector();
@@ -65,7 +65,15 @@ void TablesList::CloseScope() {
 void TablesList::CloseGlobal() {
     Symbol* main_symbol = GetSymbol("main", true);
     Function* main_function_symbol = (Function*) main_symbol;
-
+	/*if(main_symbol == nullptr) {
+		std::cout << "main symbol is null" << std::endl;
+	}
+	if(main_function_symbol->return_type != "VOID") {
+		std::cout << "main function symbol is not VOID" << std::endl;
+	}
+	if(!main_function_symbol->args.empty()) {
+		std::cout << "main has args" << std::endl;
+	}*/
     if(main_symbol == nullptr || main_function_symbol->return_type != "VOID"
        || !main_function_symbol->args.empty()) {
         output::errorMainMissing();
@@ -78,7 +86,7 @@ void TablesList::CloseGlobal() {
 Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
     for (TableVector::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
         for (SymbolsVector::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
-            if(is_func) {
+			if(is_func) {
                 if ((*symbol_it)->name == name) {
 					try {
 						Function* f = static_cast<Function*> (*symbol_it);
