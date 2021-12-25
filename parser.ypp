@@ -16,7 +16,7 @@
         ENUM_NOT,
         ENUM_BINOP,
     }Operation;
-
+	
     extern int yylineno;
     extern char* yytext;
     int yyerror(const char * message);
@@ -254,24 +254,25 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 
 Call           : ID LPAREN ExpList RPAREN                                     {
                                                                                   // TODO: Change
-                                                                                  Function* f = get_func($1->name, *$3);
+                                                                                  Function* f = get_func($1->name, $3->arguments);
                                                                                   $$ = new Exp(f->return_type);
                                                                                }
                | ID LPAREN RPAREN                                             {
-                                                                                  // TODO: Change
-                                                                                  Function* f = get_func($1->name, ArgVector());
+                                                                                  // TODO: Check where do to Delete for arg_list
+																				  ArgumentList *arg_list = new ArgumentList();
+                                                                                  Function* f = get_func($1->name, arg_list->arguments);
                                                                                   $$ = new Exp(f->return_type);
                                                                               }
 
 
 ExpList        : Exp                                                          {
                                                                                   $$ = new ArgumentList();
-                                                                                  $$->arguments.push_back(*$1);
+                                                                                  $$->arguments.push_back(Argument($1->annotation, $1->name, $1->type));
                                                                               }
                | Exp COMMA ExpList                                            {
                                                                                   $$ = new ArgumentList();
                                                                                   $$ = $3;
-                                                                                  $$->arguments.push_back(*$1);
+                                                                                  $$->arguments.push_back(Argument($1->annotation, $1->name, $1->type));
                                                                               }
 
                                                                                // TODO: check if this actually works
@@ -468,7 +469,7 @@ Function* get_func(string name, ArgVector& args){
         errorUndefFunc(yylineno, name);
         exit(0);
     }
-    validate_func(f->arguments, args, f->name);
+    validate_func(*f->args, args, f->name);
     return f;
 }
 

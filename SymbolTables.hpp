@@ -33,7 +33,7 @@ public:
 };
 
 
-typedef std::vector<Argument> ArgVec;
+typedef std::vector<Argument> ArgVector;
 typedef std::vector<Symbol_Table> TableVector;
 typedef std::stack<int> OffsetStack;
 
@@ -49,9 +49,9 @@ public:
 
 class Function : public Symbol {
 public:
-    ArgVec* args;
+    ArgVector* args;
     std::string return_type;
-    Function(std::string name, std::string return_type, ArgVec& args);
+    Function(std::string name, std::string return_type, ArgVector& args);
     ~Function();
     void print() override;
 };
@@ -72,8 +72,8 @@ public:
     void CloseScope();
     void CloseGlobal();
     void AddSymbol(const std::string& annotation, const std::string& name, const std::string& type);                                     //variable symbol
-    void AddSymbol(std::string name, std::string return_type, ArgVec& args);       //function symbol
-    void AddArgsSymbols(ArgVec& args);
+    void AddSymbol(const std::string& name, const std::string& return_type, ArgVector& args);       //function symbol
+    void AddArgsSymbols(ArgVector& args);
     void IsNameExists(const std::string& name, bool is_func);
 };
 

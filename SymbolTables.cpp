@@ -5,6 +5,9 @@
 #include "SymbolTables.hpp"
 #include "hw3_output.hpp"
 #include "Structs.hpp"
+
+extern int yylineno;
+
 Symbol::Symbol(string name, int offset, string type) : name(name), offset(offset), type(type) {};
 void Symbol::print() {}
 
@@ -15,7 +18,7 @@ void Variable::print() {
 }
 
 //======================================================================================
-Function::Function(string name, string return_type, ArgVec& args) : Symbol(name, 0, "FUNCTION"), return_type(return_type), args(&args){}
+Function::Function(string name, string return_type, ArgVector& args) : Symbol(name, 0, "FUNCTION"), return_type(return_type), args(&args){}
 
 Function::~Function() {
     delete this->args;
@@ -29,26 +32,20 @@ void Function::print() {
 
 TablesList::TablesList() {
     this->offsets = stack<int>();
-    this->tables = TableVec();
+    this->tables = TableVector();
     this->OpenGlobal();
-
-    StringVecto print_args_types;
-    StringVecto print_args_names;
-    print_args.push_back("INT");
-    print_args.push_back("arguments");
-    add_func_symbol("print", "VOID", print_args_names, print_args_types);
-    AddSymbol("print", "VOID",)
-    StringVecto printi_args_types;
-    StringVecto printi_args_names;
-    printi_args.push_back("INT");
-    printi_args.push_back("arguments");
-    AddSymbol("printi", "VOID", print_args_names, print_args_types);
+	ArgVector print_args = ArgVector();//TODO do i need 'new' here?
+	print_args.push_back(Argument("","arguments", "STRING"));
+    AddSymbol("print", "VOID", print_args);
+    ArgVector printi_args = ArgVector();
+    printi_args.push_back(Argument("","arguments", "INT"));
+    AddSymbol("printi", "VOID", print_args);
 }
 
 void TablesList::OpenGlobal() {
     Symbol_Table* first_table = new Symbol_Table(nullptr);
     this->tables.push_back(*first_table);
-    this->offsets.push(0)
+    this->offsets.push(0);
 }
 
 void TablesList::OpenScope() {
@@ -59,19 +56,19 @@ void TablesList::OpenScope() {
 
 void TablesList::CloseScope() {
     output::endScope();
-    for (Symbol* symbol : this->tables.back()->symbols) {
-        symbol->print();
+    for (Symbol symbol : this->tables.back().symbols) {
+        symbol.print();
     }
-    delete this->tables.back();
+    delete &this->tables.back();
     this->tables.pop_back();
     this->offsets.pop();
 }
 
 void TablesList::CloseGlobal() {
     Symbol* main_symbol = GetSymbol("main", true);
-    (Function*) main_symbol = (Function*) main_symbol;
-    if(main_symbol == nullptr || main_symbol->return_type != "VOID"
-       || !main_symbol->arguments_types.empty()) {
+    Function* main_function_symbol = (Function*) main_symbol;
+    if(main_symbol == nullptr || main_function_symbol->return_type != "VOID"
+       || !main_function_symbol->args->empty()) {
         output::errorMainMissing();
         exit(1);
     }
@@ -80,16 +77,16 @@ void TablesList::CloseGlobal() {
 
 
 Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
-    for (vector<Symbol_Table>::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
-        for (vector<Symbol_Table>::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
+    for (TableVector::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
+        for (SymbolsVector::reverse_iterator symbol_it = table_it->symbols.rbegin(); symbol_it != table_it->symbols.rend(); symbol_it++) {
             if(is_func) {
-                if ((*symbol_it)->name == name && (*symbol_it)->type == "FUNC") {
-                    return (*symbol_it);
+                if (symbol_it->name == name && symbol_it->type == "FUNC") {
+                    return &(*(symbol_it));
                 }
             }
             else {
-                if ((*symbol_it)->name == name && (*symbol_it)->type != "FUNC") {
-                    return (*symbol_it);
+                if (symbol_it->name == name && symbol_it->type != "FUNC") {
+                    return &(*(symbol_it));
                 }
             }
         }
@@ -101,30 +98,30 @@ Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
 void TablesList::AddSymbol(const string& annotation, const string& name, const string& type) {
     IsNameExists(name, false);
     Variable* variable_symbol = new Variable(name, this->offsets.top(), type, annotation );
-    this->tables.back()->symbols.push_back(variable_symbol);
+    this->tables.back().symbols.push_back(*variable_symbol);
     this->offsets.top() += 1;
 }
 
-void TablesList::AddSymbol(const string& name, const string& return_type, ArgVec& args) {
+void TablesList::AddSymbol(const string& name, const string& return_type, ArgVector& args) {
     IsNameExists(name, true);
 
-    ArgVec* args_to_push = new ArgVec();
+    ArgVector* args_to_push = new ArgVector();
 
-    for(ArgVec::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
-        IsNameExists((arg_it->name, false);
+    for(ArgVector::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
+        IsNameExists(arg_it->name, false);
         args_to_push->push_back(*arg_it);
     }
-    Function* function_symbol = new Function(name, return_type, args_to_push);
-    this->tables.back()->symbols.push_back(function_symbol);
+    Function* function_symbol = new Function(name, return_type, *args_to_push);
+    this->tables.back().symbols.push_back(*function_symbol);
 }
 
-void TablesList::AddArgsSymbols(ArgVec& args) {
+void TablesList::AddArgsSymbols(ArgVector& args) {
     int args_offset = -1;
 
-    for(ArgVec::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
-        IsNameExists((arg_it->name, false);
-        Variable* symbol = new VarSymbol((arg_it->name), (arg_it->type, args_offset));
-        this->tables.back()->symbols.push_back(symbol);
+    for(ArgVector::reverse_iterator arg_it = args.rbegin(); arg_it != args.rend(); arg_it++) {
+        IsNameExists(arg_it->name, false);
+        Variable* symbol = new Variable(arg_it->name, args_offset, arg_it->type, "");
+        this->tables.back().symbols.push_back(*symbol);
         args_offset -= 1;
     }
 }
