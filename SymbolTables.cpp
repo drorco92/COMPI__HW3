@@ -65,6 +65,7 @@ void TablesList::OpenGlobal() {
     Symbol_Table* first_table = new Symbol_Table(nullptr);
     this->tables.push_back(first_table);
     this->offsets.push(0);
+	OpenScope();
 }
 
 void TablesList::OpenScope() {

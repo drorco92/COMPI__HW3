@@ -189,8 +189,6 @@ Statements     : Statement                                                    {
                | Statements Statement                                         {
                                                                                   /* No Action */
                                                                               }
-
-
 Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   /* No Action */
                                                                               }
@@ -202,11 +200,11 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 																				 parser.symbolTable.AddSymbol($1->type, $3->name, $2->type);
                                                                               }
                | TypeAnnotation Type ID ASSIGN Exp SC                         {
-                                                                                 AssertAssignLegal($2->type, $5->type);
+																				 AssertAssignLegal($2->type, $5->type);
                                                                                  parser.symbolTable.AddSymbol($1->type, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
-                                                                                  if(GetAnnotation($1->name) == "CONST") {
+																				  if(GetAnnotation($1->name) == "CONST") {
 																					output::errorConstMismatch(yylineno);
 																					exit(1);
 																				  }
@@ -269,7 +267,7 @@ ExpList        : Exp                                                          {
                                                                               }
 
 Type           : INT                                                          {
-                                                                               $$ = new Exp("INT");
+																			   $$ = new Exp("INT");
                                                                               }
                | BYTE                                                         {
                                                                                $$ = new Exp("BYTE");
@@ -309,7 +307,7 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   parser.ExpType = $1->type;
                                                                               }
                | NUM                                                          {
-                                                                                  $$ = new Exp("INT");
+																				  $$ = new Exp("INT");
                                                                                   parser.ExpType = "INT";
                                                                               }
                | NUM B                                                        {
