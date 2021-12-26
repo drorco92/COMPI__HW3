@@ -1,6 +1,3 @@
-//
-// Created by user on 19/12/2021.
-//
 
 #ifndef COMPI__HW3_STRUCTS_HPP
 #define COMPI__HW3_STRUCTS_HPP
@@ -59,11 +56,11 @@ struct TypeList {
 
 typedef union Node
 {
-    Exp* exp;
-    Id* id;
-    Argument* argument;
     ArgumentList* argument_list;
+	Argument* argument;
     TypeList* type_list;
+	Exp* exp;
+    Id* id;
     int val;
 } STYPE;
 

@@ -1,6 +1,3 @@
-//
-// Created by user on 19/12/2021.
-//
 
 #include "SymbolTables.hpp"
 #include "hw3_output.hpp"
@@ -8,24 +5,21 @@
 
 extern int yylineno;
 
-Symbol::Symbol(string name, int offset, string type) : name(name), offset(offset), type(type) {};
-void Symbol::print() {}
+
 
 //======================================================================================
 Variable::Variable(string name, int offset, string type, string type_annotation) : Symbol(name, offset, type), type_annotation(type_annotation) {}
-void Variable::print() {
-    output::printID(name, offset, type);
-}
+void Variable::print() {output::printID(name, offset, type);}
 
 //======================================================================================
 Function::Function(string name, string return_type, ArgVector& args) : Symbol(name, 0, "FUNCTION"), return_type(return_type), args(args){}
 
 Function::~Function() {}
 
-void Function::print() {
-    output::printID(name, offset, output::makeFunctionType(this->return_type, this->args));
-}
+void Function::print() {output::printID(name, offset, output::makeFunctionType(this->return_type, this->args));}
 
+Symbol::Symbol(string name, int offset, string type) : name(name), offset(offset), type(type) {};
+void Symbol::print() {}
 //======================================================================================
 
 TablesList::TablesList() {
@@ -39,6 +33,33 @@ TablesList::TablesList() {
     printi_args.push_back(Argument("","arguments", "INT"));
     AddSymbol("printi", "VOID", printi_args);
 }
+
+
+
+Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
+    for (TableVector::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
+        for (SymbolsVector::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
+			if(is_func) {
+                if ((*symbol_it)->name == name && (*symbol_it)->type == "FUNCTION") {
+					try {
+						Function* f = static_cast<Function*> (*symbol_it);
+						return (f);
+					}
+					catch(...) {
+					}
+                }
+            }
+            else {
+                if ((*symbol_it)->name == name && (*symbol_it)->type != "FUNCTION") {
+                    return (*(symbol_it));
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
+
 
 void TablesList::OpenGlobal() {
     Symbol_Table* first_table = new Symbol_Table(nullptr);
@@ -65,15 +86,7 @@ void TablesList::CloseScope() {
 void TablesList::CloseGlobal() {
     Symbol* main_symbol = GetSymbol("main", true);
     Function* main_function_symbol = (Function*) main_symbol;
-	/*if(main_symbol == nullptr) {
-		std::cout << "main symbol is null" << std::endl;
-	}
-	if(main_function_symbol->return_type != "VOID") {
-		std::cout << "main function symbol is not VOID" << std::endl;
-	}
-	if(!main_function_symbol->args.empty()) {
-		std::cout << "main has args" << std::endl;
-	}*/
+
     if(main_symbol == nullptr || main_function_symbol->return_type != "VOID"
        || !main_function_symbol->args.empty()) {
         output::errorMainMissing();
@@ -82,29 +95,6 @@ void TablesList::CloseGlobal() {
     CloseScope();
 }
 
-
-Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
-    for (TableVector::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
-        for (SymbolsVector::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
-			if(is_func) {
-                if ((*symbol_it)->name == name && (*symbol_it)->type == "FUNCTION") {
-					try {
-						Function* f = static_cast<Function*> (*symbol_it);
-						return (f);
-					}
-					catch(...) {
-					}
-                }
-            }
-            else {
-                if ((*symbol_it)->name == name && (*symbol_it)->type != "FUNCTION") {
-                    return (*(symbol_it));
-                }
-            }
-        }
-    }
-    return nullptr;
-}
 
 
 void TablesList::AddSymbol(const string& annotation, const string& name, const string& type) {
@@ -140,7 +130,11 @@ void TablesList::AddArgsSymbols(ArgVector& args) {
 }
 
 void TablesList::IsNameExists(const string& name, bool is_func) {
-    if(GetSymbol(name, is_func) != nullptr || GetSymbol(name, !is_func) != nullptr) {
+    if(GetSymbol(name, !is_func) != nullptr) {
+        output::errorDef(yylineno ,name);
+        exit(1);
+    }
+	if(GetSymbol(name, is_func) != nullptr) {
         output::errorDef(yylineno ,name);
         exit(1);
     }
