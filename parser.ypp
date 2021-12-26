@@ -205,7 +205,7 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                  parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
-                                                                                  if(GetAnnotation(string name)($1->name) == "CONST") {
+                                                                                  if(GetAnnotation($1->name) == "CONST") {
 																					output::errorConstMismatch(yylineno);
 																				  }
 																				  AssertAssignLegal(GetType($1->name), $3->type);
@@ -423,7 +423,7 @@ string GetType(string name) {
     Symbol* symbol = nullptr;
     symbol =  parser.symbolTable.GetSymbol(name, false);
     if(symbol == nullptr) {
-        errorUndef(yylineno, var_name);
+        errorUndef(yylineno, name);
         exit(1);
     }
     return symbol->type;
@@ -464,7 +464,7 @@ Exp* ExecuteOperation(Exp* exp1, Exp* exp2, Operation operation) {
         case(ENUM_ASSIGN):
         {
             AssertAssignLegal(exp1->type, exp2->type);
-            return var1;
+            return exp1;
         }
 
         case(ENUM_AND):
@@ -493,7 +493,7 @@ Exp* ExecuteOperation(Exp* exp1, Exp* exp2, Operation operation) {
 Function* GetFunction(string name, ArgVector& args){
     Function* function;
     function = (Function*)(parser.symbolTable.GetSymbol(name, true));
-    if (function == nullptr || ) {
+    if (function == nullptr) {
         errorUndefFunc(yylineno, name);
         exit(1);
     }
