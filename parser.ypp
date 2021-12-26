@@ -179,7 +179,7 @@ FormalsList    : FormalDecl                                                   {
 
 
 FormalDecl     : TypeAnnotation Type ID                                       {
-                                                                                  $$ = new Argument($1->annotation, $3->name, $2->type);
+                                                                                  $$ = new Argument($1->type, $3->name, $2->type);
                                                                               }
 
 
@@ -195,19 +195,20 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   /* No Action */
                                                                               }
                | TypeAnnotation Type ID SC                                    {
-																				 if($1->annotation == "CONST") {
+																				 if($1->type == "CONST") {
 																					output::errorConstDef(yylineno);
 																					exit(1);
 																				 }
-																				 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
+																				 parser.symbolTable.AddSymbol($1->type, $3->name, $2->type);
                                                                               }
                | TypeAnnotation Type ID ASSIGN Exp SC                         {
                                                                                  AssertAssignLegal($2->type, $5->type);
-                                                                                 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
+                                                                                 parser.symbolTable.AddSymbol($1->type, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
                                                                                   if(GetAnnotation($1->name) == "CONST") {
 																					output::errorConstMismatch(yylineno);
+																					exit(1);
 																				  }
 																				  AssertAssignLegal(GetType($1->name), $3->type);
                                                                               }
@@ -259,12 +260,12 @@ Call           : ID LPAREN ExpList RPAREN                                     {
 
 ExpList        : Exp                                                          {
                                                                                   $$ = new ArgumentList();
-                                                                                  $$->arguments.push_back(Argument($1->annotation, $1->name, $1->type));
+                                                                                  $$->arguments.push_back(Argument($1->type, $1->name, $1->type));
                                                                               }
                | Exp COMMA ExpList                                            {
                                                                                   $$ = new ArgumentList();
                                                                                   $$ = $3;
-                                                                                  $$->arguments.push_back(Argument($1->annotation, $1->name, $1->type));
+                                                                                  $$->arguments.push_back(Argument($1->type, $1->name, $1->type));
                                                                               }
 
 Type           : INT                                                          {
@@ -279,7 +280,7 @@ Type           : INT                                                          {
 
 
 TypeAnnotation : CONST                                                        {
-                                                                                  $$ = new Exp("CONST");
+																				  $$ = new Exp("CONST");
                                                                               }
                |                                                              {
                                                                                   $$ = new Exp("");
