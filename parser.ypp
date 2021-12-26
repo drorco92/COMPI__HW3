@@ -83,43 +83,44 @@
 %token B
 %token BOOL
 %token CONST
-%left AND
-%left OR
-%right NOT
 %token TRUE
 %token FALSE
 %token RETURN
 %token IF
-%nonassoc ELSE
 %token WHILE
 %token BREAK
 %token CONTINUE
 %token SC
 %token COMMA
-%nonassoc LPAREN
-%nonassoc RPAREN
 %token LBRACE
 %token RBRACE
-%right ASSIGN
-%left RELOP_EQUAL
-%nonassoc RELOP
-%left BINOP_ADD
-%left BINOP_MULTIPLY
 %token ID
 %token NUM
 %token STRING
-
-%type<exp> TypeAnnotation
-%type<exp> Type
-%type<id> ID
 %type<exp> NUM
+%type<id> ID
 %type<exp> Exp
+%type<exp> Type
 %type<exp> RetType
 %type<exp> Call
+%type<exp> TypeAnnotation
 %type<argument> FormalDecl
 %type<argument_list> FormalsList
 %type<argument_list> Formals
 %type<argument_list> ExpList
+
+
+%right ASSIGN
+%left OR
+%left AND
+%left RELOP_EQUAL
+%nonassoc RELOP
+%left BINOP_ADD
+%left BINOP_MULTIPLY
+%right NOT
+%nonassoc RPAREN
+%nonassoc LPAREN
+%nonassoc ELSE
 
 %%
 Program        : Funcs                                                        {
@@ -224,7 +225,13 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 																				  parser.AssertReturn($2->type);
                                                                               }
                | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd
-               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd                           
+                                                                              {
+                                                                                 /* No Action */
+                                                                              }
+               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd
+                                                                              {
+                                                                                 /* No Action */
+                                                                              }
                | WHILE LPAREN Exp CheckBool RPAREN                             
 																			  {
                                                                                   parser.EnterLoopScope();
