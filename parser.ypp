@@ -4,9 +4,6 @@
 	#include "SymbolTables.hpp"
 	using namespace output;
 
-
-
-
     typedef enum {
         ENUM_NONE,
         ENUM_ASSIGN,
@@ -15,35 +12,23 @@
         ENUM_OR,
         ENUM_NOT,
         ENUM_BINOP,
-    }Operation;
-	
+    } Operation;
+
+	int main();
     extern int yylineno;
     extern char* yytext;
     extern int yylex();
     void CheckLegalB(int n);
     Exp* NewCastedExp(const Exp* exp, const string& type);
-    Function* get_func(string name, ArgVector& args);
-	void validate_func(ArgVector& expected, ArgVector& current, string name);
-    void vaildate_type(string x, string y);
-	string get_var_annotation(string var_name);
-    Exp* do_op(Exp* var1, Exp* var2, Operation op);
-    string get_var_type(string var_name);
-    void validate_assign(string var1, string var2);
-    bool is_number(Exp* var);
+    Function* GetFunction(string name, ArgVector& args);
+    void AssertFunctionUseLegal(ArgVector& expected, ArgVector& current, string name);
+    string GetAnnotation(string name);
+    Exp* ExecuteOperation(Exp* exp1, Exp* exp2, Operation operation);
+    string GetType(string name);
+    void AssertAssignLegal(string type1, string type2);
+    bool NumberType(Exp* exp);
+    void AssertLegalEpsilonFuncsDerivation();
     int yyerror(const char* message);
-    int main();
-
-
-
-/*    string[7] OperationType = {
-        "", // NONE
-        "ASSIGN",
-        "RELOP",
-        "AND",
-        "OR",
-        "NOT",
-        "BINOP",
-    };*/
 
 	class Parser {
 	private:
@@ -148,9 +133,7 @@ Funcs          : FuncDecl Funcs                                               {
 																				  /* No Action */
                                                                               }
                |                                                              {
-                                                                                  if(string(yytext) != "") {
-                                                                                    yyerror(nullptr);
-                                                                                  }
+                                                                                  AssertLegalEpsilonFuncsDerivation();
                                                                               }
 
 
@@ -219,14 +202,14 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 																				 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | TypeAnnotation Type ID ASSIGN Exp SC                         {
-                                                                                 validate_assign($2->type, $5->type);
+                                                                                 AssertAssignLegal($2->type, $5->type);
                                                                                  parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
-                                                                                  if(get_var_annotation($1->name) == "CONST") {
+                                                                                  if(GetAnnotation($1->name) == "CONST") {
 																					output::errorConstMismatch(yylineno);
 																				  }
-																				  validate_assign(get_var_type($1->name), $3->type);
+																				  AssertAssignLegal(GetType($1->name), $3->type);
                                                                               }
                | Call SC                                                      {
                                                                                   /* No Action */
@@ -242,7 +225,13 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 																				  parser.AssertReturn($2->type);
                                                                               }
                | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd
-               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd                           
+                                                                              {
+                                                                                 /* No Action */
+                                                                              }
+               | IF LPAREN Exp CheckBool RPAREN ScopeStart Statement ScopeEnd ELSE ScopeStart Statement ScopeEnd
+                                                                              {
+                                                                                 /* No Action */
+                                                                              }
                | WHILE LPAREN Exp CheckBool RPAREN                             
 																			  {
                                                                                   parser.EnterLoopScope();
@@ -260,15 +249,11 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
 
 
 Call           : ID LPAREN ExpList RPAREN                                     {
-                                                                                  // TODO: Change
-                                                                                  Function* f = get_func($1->name, $3->arguments);
-                                                                                  $$ = new Exp(f->return_type);
-                                                                               }
+                                                                                  $$ = new Exp(GetFunction($1->name, $3->arguments)->return_type);
+                                                                              }
                | ID LPAREN RPAREN                                             {
-                                                                                  // TODO: Check where do to Delete for arg_list
 																				  ArgumentList *arg_list = new ArgumentList();
-                                                                                  Function* f = get_func($1->name, arg_list->arguments);
-                                                                                  $$ = new Exp(f->return_type);
+                                                                                  $$ = new Exp(GetFunction($1->name, arg_list->arguments)->return_type);
                                                                               }
 
 
@@ -282,7 +267,6 @@ ExpList        : Exp                                                          {
                                                                                   $$->arguments.push_back(Argument($1->annotation, $1->name, $1->type));
                                                                               }
 
-                                                                               // TODO: check if this actually works
 Type           : INT                                                          {
                                                                                $$ = new Exp("INT");
                                                                               }
@@ -307,17 +291,17 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   parser.ExpType = "INT";
                                                                               }
                | Exp BINOP_ADD Exp                                            {
-                                                                                  $$ = do_op($1, $3, ENUM_BINOP);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_BINOP);
                                                                                   parser.ExpType = "INT";
                                                                               }
                | Exp BINOP_MULTIPLY Exp                                       {
-                                                                                  $$ = do_op($1, $3, ENUM_BINOP);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_BINOP);
                                                                                   parser.ExpType = "INT";
                                                                               }
                | ID                                                           {
-																				  $$ = new Exp(get_var_type($1->name));
+																				  $$ = new Exp(GetType($1->name));
                                                                                   $$->name = $1->name;
-                                                                                  parser.ExpType = get_var_type($1->name);
+                                                                                  parser.ExpType = GetType($1->name);
                                                                               }
                | Call                                                         {
                                                                                   $$ = new Exp($1->type);
@@ -345,23 +329,23 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | NOT Exp                                                      {
-                                                                                  $$ = do_op($2, $2, ENUM_NOT);
+                                                                                  $$ = ExecuteOperation($2, $2, ENUM_NOT);
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | Exp AND Exp                                                  {
-                                                                                  $$ = do_op($1, $3, ENUM_AND);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_AND);
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | Exp OR Exp                                                   {
-                                                                                  $$ = do_op($1, $3, ENUM_OR);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_OR);
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | Exp RELOP_EQUAL Exp                                          {
-                                                                                  $$ = do_op($1, $3, ENUM_RELOP);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_RELOP);
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | Exp RELOP Exp                                                {
-                                                                                  $$ = do_op($1, $3, ENUM_RELOP);
+                                                                                  $$ = ExecuteOperation($1, $3, ENUM_RELOP);
                                                                                   parser.ExpType = "BOOL";
                                                                               }
                | LPAREN Type RPAREN Exp                                       {
@@ -377,7 +361,11 @@ ScopeEnd        :                                                             {
                                                                               }
 																			  
 CheckBool		:															  {
-																				vaildate_type(parser.ExpType, "BOOL");
+                                                                                  if (parser.ExpType !="BOOL")
+                                                                                  {
+                                                                                      errorMismatch(yylineno);
+                                                                                      exit(1);
+                                                                                  }
 																			  }
 
 
@@ -394,7 +382,7 @@ int yyerror(const char* message)
 	exit(1);
 }
 
-void CheckLegalB(int n)
+inline void CheckLegalB(int n)
 {
     if (n > 255)
     {
@@ -403,97 +391,20 @@ void CheckLegalB(int n)
     }
 }
 
-bool is_number(Exp* var) {
-    if (var->type == "INT" || var->type == "BYTE")
-        return true;
-    else
-        return false;
-}
-
-void validate_assign(string var1, string var2) {
-	
-    if(var1 == "VOID" || !(var1 == var2 || (var1 == "INT" && var2 == "BYTE"))) {
+void AssertAssignLegal(string type1, string type2) {
+    if((type1 != type2 && (type1 != "INT" || type2 != "BYTE")) || type1 == "VOID") {
         errorMismatch(yylineno);
         exit(1);
     }
 }
 
-string get_var_type(string var_name) {
-    Symbol* var = (Symbol *)parser.symbolTable.GetSymbol(var_name, false);
-    if(var == nullptr) {
-        errorUndef(yylineno, var_name);
-        exit(1);
-    }
-    return var->type;
-}
-
-string get_var_annotation(string var_name) {
-    Variable* var = (Variable*)parser.symbolTable.GetSymbol(var_name, false);
-    if(var == nullptr) {
-        errorUndef(yylineno, var_name);
-        exit(1);
-    }
-    return var->type_annotation;
-}
-
-Exp* do_op(Exp* var1, Exp* var2, Operation op) {
-    if(var1->type == "STRING" || var2->type == "STRING") {
-        goto err;
-    }
-    switch(op){
-        case(ENUM_ASSIGN):
-            validate_assign(var1->type, var2->type);
-            return var1;
-
-        case(ENUM_RELOP):
-            if (is_number(var1) && is_number(var2))
-                return new Exp("BOOL");
-            break;
-
-         case(ENUM_AND):
-         case(ENUM_OR):
-            if (var1->type == "BOOL" && var2->type == "BOOL")
-                return new Exp("BOOL");
-            break;
-
-        case(ENUM_NOT):
-            if (var1->type == "BOOL")
-                return new Exp("BOOL");
-            break;
-
-        case(ENUM_BINOP):
-            if (is_number(var1) && is_number(var2)){
-                if(var1->type == "INT" || var2->type == "INT")
-                    return new Exp("INT");
-                else
-                    return new Exp("BYTE");
-            }
-            break;
-    }
-err:
-    errorMismatch(yylineno);
-    exit(1);
-}
-
-void vaildate_type(string x, string y){
-    if (x != y)
-    {
-		output::errorMismatch(yylineno);
-        exit(1);
+void AssertLegalEpsilonFuncsDerivation(){
+    if(string(yytext) != "") {
+        yyerror(nullptr);
     }
 }
 
-Function* get_func(string name, ArgVector& args){
-    Function* f = (Function*)(parser.symbolTable.GetSymbol(name, true));
-    if (f == nullptr) {
-        errorUndefFunc(yylineno, name);
-        exit(1);
-    }
-    validate_func(f->args, args, f->name);
-    return f;
-}
-
-void validate_func(ArgVector& expected, ArgVector& current, string name) {
+void AssertFunctionUseLegal(ArgVector& expected, ArgVector& current, string name) {
     if (expected.size() != current.size())
     {
         errorPrototypeMismatch(yylineno, name, expected);
@@ -506,6 +417,96 @@ void validate_func(ArgVector& expected, ArgVector& current, string name) {
             exit(1);
         }
     }
+}
+
+inline bool NumberType(Exp* exp) {
+    if (exp->type != "BYTE" && exp->type != "INT"){
+        return false;
+    }
+    return true;
+}
+
+string GetType(string name) {
+    Symbol* symbol = nullptr;
+    symbol =  parser.symbolTable.GetSymbol(name, false);
+    if(symbol == nullptr) {
+        errorUndef(yylineno, name);
+        exit(1);
+    }
+    return symbol->type;
+}
+
+string GetAnnotation(string name) {
+    Variable* symbol;
+    symbol = (Variable*)parser.symbolTable.GetSymbol(name, false);
+    if (symbol == nullptr){
+        errorUndef(yylineno, name);
+        exit(1);
+    }
+    return symbol->type_annotation;
+}
+
+Exp* ExecuteOperation(Exp* exp1, Exp* exp2, Operation operation) {
+    if(exp1->type == "STRING" || exp2->type == "STRING") {
+        errorMismatch(yylineno);
+        exit(1);
+    }
+
+    switch(operation)
+    {
+         case(ENUM_NOT):
+         {
+              if (exp1->type == "BOOL")
+              return new Exp("BOOL");
+              break;
+         }
+
+         case(ENUM_RELOP):
+         {
+             if (NumberType(exp1) && NumberType(exp2))
+                 return new Exp("BOOL");
+             break;
+         }
+
+        case(ENUM_ASSIGN):
+        {
+            AssertAssignLegal(exp1->type, exp2->type);
+            return exp1;
+        }
+
+        case(ENUM_AND):
+        case(ENUM_OR):
+        {
+           if (exp1->type == "BOOL" && exp2->type == "BOOL")
+               return new Exp("BOOL");
+           break;
+        }
+
+        case(ENUM_BINOP):
+        {
+            if (NumberType(exp1) && NumberType(exp2)){
+                if(exp1->type == "INT" || exp2->type == "INT")
+                    return new Exp("INT");
+                else
+                    return new Exp("BYTE");
+            }
+            break;
+        }
+    }
+    errorMismatch(yylineno);
+    exit(1);
+}
+
+Function* GetFunction(string name, ArgVector& args){
+    Function* function;
+    function = (Function*)(parser.symbolTable.GetSymbol(name, true));
+    if (function == nullptr) {
+        errorUndefFunc(yylineno, name);
+        exit(1);
+    }
+
+    AssertFunctionUseLegal(function->args, args, function->name);
+    return function;
 }
 
 Exp* NewCastedExp(const Exp* exp, const string& type) {
