@@ -50,6 +50,6 @@ continue                      return CONTINUE;
 \"([^\n\r\"\\]|\\[rnt"\\])+\" return STRING;
 [\t\r\n ]                     ;
 \/\/[^\r\n]*(\r|\n|\r\n)?     ;
-.                           {std::cout << "1" << std::endl;output::errorLex(yylineno); exit(1);}
+.                           {output::errorLex(yylineno); exit(1);}
 
 %%

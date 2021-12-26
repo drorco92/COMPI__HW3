@@ -87,17 +87,17 @@ Symbol* TablesList::GetSymbol(const string& name, bool is_func) {
     for (TableVector::reverse_iterator table_it = this->tables.rbegin(); table_it != this->tables.rend(); table_it++) {
         for (SymbolsVector::reverse_iterator symbol_it = (*table_it)->symbols.rbegin(); symbol_it != (*table_it)->symbols.rend(); symbol_it++) {
 			if(is_func) {
-                if ((*symbol_it)->name == name) {
+                if ((*symbol_it)->name == name && (*symbol_it)->type == "FUNCTION") {
 					try {
 						Function* f = static_cast<Function*> (*symbol_it);
-						return (*(symbol_it));
+						return (f);
 					}
 					catch(...) {
 					}
                 }
             }
             else {
-                if ((*symbol_it)->name == name && (*symbol_it)->type != "FUNC") {
+                if ((*symbol_it)->name == name && (*symbol_it)->type != "FUNCTION") {
                     return (*(symbol_it));
                 }
             }

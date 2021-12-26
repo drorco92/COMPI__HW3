@@ -148,14 +148,13 @@ Funcs          : FuncDecl Funcs                                               {
 																				  /* No Action */
                                                                               }
                |                                                              {
-                                                                                  if(parser.ScopeReturnType != "") {
+                                                                                  if(string(yytext) != "") {
                                                                                     yyerror(nullptr);
                                                                                   }
                                                                               }
 
 
 FuncDecl       : RetType ID LPAREN Formals RPAREN                             {
-                                                                                  //std::cout << "namerrr : " + $1->annotation << std::endl;
 																				  parser.symbolTable.AddSymbol($2->name, $1->type, $4->arguments);
                                                                               }
                  LBRACE                                                       {
@@ -480,7 +479,7 @@ void vaildate_type(string x, string y){
     if (x != y)
     {
 		output::errorMismatch(yylineno);
-        exit(0);
+        exit(1);
     }
 }
 
@@ -488,7 +487,7 @@ Function* get_func(string name, ArgVector& args){
     Function* f = (Function*)(parser.symbolTable.GetSymbol(name, true));
     if (f == nullptr) {
         errorUndefFunc(yylineno, name);
-        exit(0);
+        exit(1);
     }
     validate_func(f->args, args, f->name);
     return f;
