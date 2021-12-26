@@ -19,13 +19,13 @@
 	
     extern int yylineno;
     extern char* yytext;
-    int yyerror(const char * message);
     extern int yylex();
     void CheckLegalB(int n);
     Exp* NewCastedExp(const Exp* exp, const string& type);
     Function* get_func(string name, ArgVector& args);
 	void validate_func(ArgVector& expected, ArgVector& current, string name);
     void vaildate_type(string x, string y);
+	string get_var_annotation(string var_name);
     Exp* do_op(Exp* var1, Exp* var2, Operation op);
     string get_var_type(string var_name);
     void validate_assign(string var1, string var2);
@@ -155,7 +155,8 @@ Funcs          : FuncDecl Funcs                                               {
 
 
 FuncDecl       : RetType ID LPAREN Formals RPAREN                             {
-                                                                                  parser.symbolTable.AddSymbol($2->name, $1->type, $4->arguments);
+                                                                                  //std::cout << "namerrr : " + $1->annotation << std::endl;
+																				  parser.symbolTable.AddSymbol($2->name, $1->type, $4->arguments);
                                                                               }
                  LBRACE                                                       {
                                                                                   parser.symbolTable.OpenScope();
@@ -173,7 +174,7 @@ RetType        : Type                                                         {
                                                                               }
                | VOID                                                         {
                                                                                   $$ = new Exp("VOID");
-                                                                              }
+                                                                              }														  
 
 
 Formals        : FormalsList                                                  {
@@ -212,6 +213,10 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                   /* No Action */
                                                                               }
                | TypeAnnotation Type ID SC                                    {
+																				 if($1->annotation == "CONST") {
+																					output::errorConstDef(yylineno);
+																					exit(1);
+																				 }
 																				 parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | TypeAnnotation Type ID ASSIGN Exp SC                         {
@@ -219,7 +224,10 @@ Statement      : LBRACE ScopeStart Statements RBRACE ScopeEnd                 {
                                                                                  parser.symbolTable.AddSymbol($1->annotation, $3->name, $2->type);
                                                                               }
                | ID ASSIGN Exp SC                                             {
-                                                                                  validate_assign(get_var_type($1->name), $3->type);
+                                                                                  if(get_var_annotation($1->name) == "CONST") {
+																					output::errorConstMismatch(yylineno);
+																				  }
+																				  validate_assign(get_var_type($1->name), $3->type);
                                                                               }
                | Call SC                                                      {
                                                                                   /* No Action */
@@ -308,7 +316,7 @@ Exp            : LPAREN Exp RPAREN                                            {
                                                                                   parser.ExpType = "INT";
                                                                               }
                | ID                                                           {
-                                                                                  $$ = new Exp(get_var_type($1->name));
+																				  $$ = new Exp(get_var_type($1->name));
                                                                                   $$->name = $1->name;
                                                                                   parser.ExpType = get_var_type($1->name);
                                                                               }
@@ -404,7 +412,7 @@ bool is_number(Exp* var) {
 }
 
 void validate_assign(string var1, string var2) {
-
+	
     if(var1 == "VOID" || !(var1 == var2 || (var1 == "INT" && var2 == "BYTE"))) {
         errorMismatch(yylineno);
         exit(1);
@@ -418,6 +426,15 @@ string get_var_type(string var_name) {
         exit(1);
     }
     return var->type;
+}
+
+string get_var_annotation(string var_name) {
+    Variable* var = (Variable*)parser.symbolTable.GetSymbol(var_name, false);
+    if(var == nullptr) {
+        errorUndef(yylineno, var_name);
+        exit(1);
+    }
+    return var->type_annotation;
 }
 
 Exp* do_op(Exp* var1, Exp* var2, Operation op) {
